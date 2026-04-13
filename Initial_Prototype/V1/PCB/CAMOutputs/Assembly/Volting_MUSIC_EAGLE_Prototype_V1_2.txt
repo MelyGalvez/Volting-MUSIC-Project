@@ -1,0 +1,8 @@
+Partlist exported from C:/Users/userlisv/Documents/EAGLE/projects/Prototype V1.2/untitled.sch at 23/05/2025 15:34
+
+Qty Value          Device         Package Parts                Description               MF    MPN OC_FARNELL OC_NEWARK POPULARITY SPICEPREFIX
+3   22-27-2021-02  22-27-2021-02  6410-02 LEDB, LEDG, LEDR     CONNECTOR                 MOLEX     unknown    unknown   0                     
+2   22-27-2041-04  22-27-2041-04  6410-04 HC-SR04_1, HC-SR04_2 CONNECTOR                 MOLEX     unknown    unknown   0                     
+3   220            R-EU_M1206     M1206   R1, R2, R3           RESISTOR, European symbol                                17         R          
+1   BNO055         BNO055         BNO055  U$1                                                                                                 
+1   NANO_FOOTPRINT NANO_FOOTPRINT NANO    J1                   Generic Nano Footprint                                                         
