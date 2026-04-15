@@ -1,0 +1,11 @@
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-F_Cu.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-B_Cu.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-F_Paste.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-B_Paste.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-F_Silkscreen.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-B_Silkscreen.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-F_Mask.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-B_Mask.gbr'.
+Plotted to 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-Edge_Cuts.gbr'.
+Création du fichier Gerber "job" 'C:\Users\melyg\OneDrive\Bureau\Volting\Volting-MUSIC-Project\Initial_Prototype\V1\PCB\Measurement_Device_PCB\Measurement_Device_PCB-job.gbrjob'.
+Info: Fini.
