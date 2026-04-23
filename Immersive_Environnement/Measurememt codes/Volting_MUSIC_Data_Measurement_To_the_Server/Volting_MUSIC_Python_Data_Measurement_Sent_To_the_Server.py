@@ -11,7 +11,7 @@ ser.reset_input_buffer()
 # ---------- FILE ----------
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-path = rf"C:\Users\Administrator\Desktop\Volting-MUSIC-Project\Immersive_Environnement\Measuremets results\Position_Measurement_{timestamp}.csv"
+path = rf"C:\Users\Administrator\Desktop\Volting-MUSIC-Project\Immersive_Environnement\Measurememt codes\Volting_MUSIC_Data_Measurement_To_the_Server\Measuremets results\Position_Measurement_{timestamp}.csv"
 
 # ---------- CSV ----------
 fieldnames = [

@@ -8,7 +8,7 @@ ser = serial.Serial('COM4', 115200, timeout=1)
 
 # Nom du fichier
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-path = rf"C:\Users\Administrator\Desktop\Volting-MUSIC-Project\Immersive_Environnement\Measuremets results\donnees_volting_{timestamp}.csv"
+path = rf"C:\Users\Administrator\Desktop\Volting-MUSIC-Project\Immersive_Environnement\Measurememt codes\Volting_MUSIC_All_Data_Measurement\Measuremets results\Position_Measurement_{timestamp}.csv"
 
 with open(path, 'w', newline='') as csvfile:
 
