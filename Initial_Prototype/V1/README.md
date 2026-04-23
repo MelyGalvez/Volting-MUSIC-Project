@@ -14,5 +14,6 @@ To use this primarial system you must have those following componants:
 - 5 Security TH resistors of 220 Ohm
 - 2 1-Metre cable leads, male to 4-pin female
 - 2 1-Metre cable leads, male to 3-pin female
-- 1 Breadboard, measuring at least 10 × 10 cm (if you can print your own PCB it's better, the code is in th Measurement_Device_PCB <https://github.com/MelyGalvez/Volting-MUSIC-Project/tree/main/Initial_Prototype/V1/PCB/Measurement_Device_PCB> file)
+- 1 Breadboard, measuring at least 10 × 10 cm (if you can print your own PCB it's better, the code is in the [Measurement_Device_PCB](https://github.com/MelyGalvez/Volting-MUSIC-Project/tree/main/Initial_Prototype/V1/PCB/Measurement_Device_PCB) file)
 - 1 Soldering iron and some tin
+
