@@ -1,0 +1,19 @@
+Partlist exported from C:/Users/Administrator/Documents/EAGLE/projects/IMU_PCB/IMU_PCB.sch at 26/05/2026 10:13
+
+Qty Value       Device                    Package                    Parts              Description                                                                                                     BOM     PROD_ID   
+1               CONN_04JST-SMD-LOCKING    JST-4-SMD-1.25MM-LOCKING   J1                 Multi connection point. Often used as Generic Header-pin footprint for 0.1 inch spaced/style header connections         CONN-15303
+1               HEADER-1X476MIL           1X04_ROUND_76              JP2                PIN HEADER                                                                                                                        
+1               HEADER-1X670MIL           1X06_ROUND_70              JP3                PIN HEADER                                                                                                                        
+4               JST_2PIN-SMT-RA           JST-PH-2-SMT-RA            CN1, CN2, CN3, CN4 JST 2-Pin Connectors of various flavors                                                                                           
+1               SOLDERJUMPER              SOLDERJUMPER_ARROW_NOPASTE SJ1                SMD Solder JUMPER                                                                                               EXCLUDE           
+2   0.1uF       CAP_CERAMIC0603_NO        0603-NO                    C3, C9             Ceramic Capacitors                                                                                                                
+1   10K         RESISTOR_0603_NOOUT       0603-NO                    R4                 Resistors                                                                                                                         
+2   10K         RESISTOR_4PACK            RESPACK_4X0603             R1, R3             Resistor Packs (4 resistors)                                                                                                      
+2   10uF        CAP_CERAMIC0805-NOOUTLINE 0805-NO                    C7, C8             Ceramic Capacitors                                                                                                                
+1   1n4148      DIODESOD-323              SOD-323                    D1                 Diode                                                                                                                             
+2   22pF        CAP_CERAMIC0603_NO        0603-NO                    C1, C2             Ceramic Capacitors                                                                                                                
+1   32.768      XTAL-3.2X1.5              XTAL3215                   X2                 Low cost SMT crystals, no capacitors included                                                                                     
+1   AP2112K-3.3 VREG_SOT23-5              SOT23-5                    U2                 SOT23-5 Fixed Voltage Regulators                                                                                                  
+1   BNO055      BNO055                    BNO055                     BNO055             BNO055 - Motion Co-Processor                                                                                                      
+1   BSS138      MOSFET-N_DUAL             SOT363                     Q3                 Dual N-Channel MOSFET                                                                                                             
+1   GREEN       LED0603_NOOUTLINE         CHIPLED_0603_NOOUTLINE     D2                 LED                                                                                                                               
