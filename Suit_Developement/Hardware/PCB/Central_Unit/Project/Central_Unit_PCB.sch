@@ -3055,33 +3055,33 @@ type 0309, grid 2.5 mm</description>
 <pad name="10" x="-7.62" y="-8.89" drill="1.11" diameter="1.665"/>
 <pad name="11" x="-7.62" y="-11.43" drill="1.11" diameter="1.665"/>
 <pad name="12" x="-7.62" y="-13.97" drill="1.11" diameter="1.665"/>
-<pad name="13" x="7.62" y="-13.97" drill="1.11" diameter="1.665"/>
-<pad name="14" x="7.62" y="-11.43" drill="1.11" diameter="1.665"/>
-<pad name="15" x="7.62" y="-8.89" drill="1.11" diameter="1.665"/>
-<pad name="16" x="7.62" y="-6.35" drill="1.11" diameter="1.665"/>
-<pad name="17" x="7.62" y="-3.81" drill="1.11" diameter="1.665"/>
-<pad name="18" x="7.62" y="-1.27" drill="1.11" diameter="1.665"/>
-<pad name="19" x="7.62" y="1.27" drill="1.11" diameter="1.665"/>
-<pad name="20" x="7.62" y="3.81" drill="1.11" diameter="1.665"/>
-<pad name="21" x="7.62" y="6.35" drill="1.11" diameter="1.665"/>
-<pad name="22" x="7.62" y="8.89" drill="1.11" diameter="1.665"/>
-<pad name="23" x="7.62" y="11.43" drill="1.11" diameter="1.665"/>
-<pad name="24" x="7.62" y="13.97" drill="1.11" diameter="1.665"/>
-<pad name="25" x="0" y="12.7" drill="2.54" diameter="3.81"/>
-<pad name="26" x="0" y="-12.7" drill="2.54" diameter="3.81"/>
+<pad name="13" x="10.16" y="-13.97" drill="1.11" diameter="1.665"/>
+<pad name="14" x="10.16" y="-11.43" drill="1.11" diameter="1.665"/>
+<pad name="15" x="10.16" y="-8.89" drill="1.11" diameter="1.665"/>
+<pad name="16" x="10.16" y="-6.35" drill="1.11" diameter="1.665"/>
+<pad name="17" x="10.16" y="-3.81" drill="1.11" diameter="1.665"/>
+<pad name="18" x="10.16" y="-1.27" drill="1.11" diameter="1.665"/>
+<pad name="19" x="10.16" y="1.27" drill="1.11" diameter="1.665"/>
+<pad name="20" x="10.16" y="3.81" drill="1.11" diameter="1.665"/>
+<pad name="21" x="10.16" y="6.35" drill="1.11" diameter="1.665"/>
+<pad name="22" x="10.16" y="8.89" drill="1.11" diameter="1.665"/>
+<pad name="23" x="10.16" y="11.43" drill="1.11" diameter="1.665"/>
+<pad name="24" x="10.16" y="13.97" drill="1.11" diameter="1.665"/>
+<pad name="25" x="1.27" y="12.7" drill="2.54" diameter="3.81"/>
+<pad name="26" x="1.27" y="-12.7" drill="2.54" diameter="3.81"/>
 <text x="0" y="0" size="1.27" layer="25" align="center">&gt;NAME</text>
 <text x="0" y="0" size="1.27" layer="27" align="center">&gt;VALUE</text>
-<wire x1="-8.89" y1="15.24" x2="8.89" y2="15.24" width="0.2" layer="51"/>
-<wire x1="8.89" y1="15.24" x2="8.89" y2="-15.24" width="0.2" layer="51"/>
-<wire x1="8.89" y1="-15.24" x2="-8.89" y2="-15.24" width="0.2" layer="51"/>
+<wire x1="-8.89" y1="15.24" x2="11.43" y2="15.24" width="0.2" layer="51"/>
+<wire x1="11.43" y1="15.24" x2="11.43" y2="-15.24" width="0.2" layer="51"/>
+<wire x1="11.43" y1="-15.24" x2="-8.89" y2="-15.24" width="0.2" layer="51"/>
 <wire x1="-8.89" y1="-15.24" x2="-8.89" y2="15.24" width="0.2" layer="51"/>
-<wire x1="-8.89" y1="15.24" x2="8.89" y2="15.24" width="0.1" layer="21"/>
-<wire x1="8.89" y1="15.24" x2="8.89" y2="-15.24" width="0.1" layer="21"/>
-<wire x1="8.89" y1="-15.24" x2="-8.89" y2="-15.24" width="0.1" layer="21"/>
+<wire x1="-8.89" y1="15.24" x2="11.43" y2="15.24" width="0.1" layer="21"/>
+<wire x1="11.43" y1="15.24" x2="11.43" y2="-15.24" width="0.1" layer="21"/>
+<wire x1="11.43" y1="-15.24" x2="-8.89" y2="-15.24" width="0.1" layer="21"/>
 <wire x1="-8.89" y1="-15.24" x2="-8.89" y2="15.24" width="0.1" layer="21"/>
-<wire x1="-9.89" y1="16.24" x2="9.89" y2="16.24" width="0.1" layer="51"/>
-<wire x1="9.89" y1="16.24" x2="9.89" y2="-16.24" width="0.1" layer="51"/>
-<wire x1="9.89" y1="-16.24" x2="-9.89" y2="-16.24" width="0.1" layer="51"/>
+<wire x1="-9.89" y1="16.24" x2="12.43" y2="16.24" width="0.1" layer="51"/>
+<wire x1="12.43" y1="16.24" x2="12.43" y2="-16.24" width="0.1" layer="51"/>
+<wire x1="12.43" y1="-16.24" x2="-9.89" y2="-16.24" width="0.1" layer="51"/>
 <wire x1="-9.89" y1="-16.24" x2="-9.89" y2="16.24" width="0.1" layer="51"/>
 </package>
 </packages>
