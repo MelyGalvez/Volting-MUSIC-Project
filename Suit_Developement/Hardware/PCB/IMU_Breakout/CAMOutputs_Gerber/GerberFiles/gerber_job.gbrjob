@@ -1,7 +1,7 @@
 {
     "Header": {
         "Comment": "All values are metric (mm)",
-        "CreationDate": "2026-05-28T03:30:52Z",
+        "CreationDate": "2026-05-28T10:25:20Z",
         "GenerationSoftware": {
             "Application": "EAGLE",
             "Vendor": "Autodesk",
@@ -13,12 +13,12 @@
         "BoardThickness": 1.57,
         "LayerNumber": 2,
         "Name": {
-            "ProjectId": "Central_Unit_PCB"
+            "ProjectId": "IMU_PCB_Breakout"
         },
         "Owner": "Mely Galvez <mely.galvez@ensea.fr>",
         "Size": {
-            "X": 60,
-            "Y": 110
+            "X": 44.7,
+            "Y": 30.79
         }
     }
 }

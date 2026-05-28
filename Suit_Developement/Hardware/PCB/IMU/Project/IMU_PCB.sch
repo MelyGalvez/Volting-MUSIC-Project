@@ -8461,18 +8461,18 @@ Part Number: HA-522</description>
 </sheets>
 <errors>
 <approved hash="102,1,43.18,162.56,OUT,3.3V,,,,"/>
-<approved hash="104,1,58.42,118.618,U$2,VDD,3.3V,,,"/>
-<approved hash="104,1,58.42,116.078,U$2,VDDIO,3.3V,,,"/>
+<approved hash="104,1,58.42,118.618,BNO055,VDD,3.3V,,,"/>
+<approved hash="104,1,58.42,116.078,BNO055,VDDIO,3.3V,,,"/>
 <approved hash="104,1,22.86,162.56,U2,IN,VCC,,,"/>
 <approved hash="113,1,130.071,89.431,FRAME1,,,,,"/>
-<approved hash="113,1,147.557,19.7536,JP2,,,,,"/>
-<approved hash="113,1,25.6371,108.654,JP3,,,,,"/>
+<approved hash="113,1,147.557,19.7841,JP2,,,,,"/>
+<approved hash="113,1,25.6371,108.684,JP3,,,,,"/>
 <approved hash="113,1,127,104.623,SJ1,,,,,"/>
-<approved hash="113,1,195.817,109.416,CN1,,,,,"/>
-<approved hash="113,1,220.743,106.484,CN2,,,,,"/>
-<approved hash="113,1,195.817,56.0756,CN3,,,,,"/>
-<approved hash="113,1,223.283,53.1444,CN4,,,,,"/>
-<approved hash="113,1,222.843,155.072,J1,,,,,"/>
+<approved hash="113,1,195.817,109.446,CN1,,,,,"/>
+<approved hash="113,1,220.743,106.454,CN2,,,,,"/>
+<approved hash="113,1,195.817,56.1061,CN3,,,,,"/>
+<approved hash="113,1,223.283,53.1139,CN4,,,,,"/>
+<approved hash="113,1,222.843,155.103,J1,,,,,"/>
 </errors>
 </schematic>
 </drawing>

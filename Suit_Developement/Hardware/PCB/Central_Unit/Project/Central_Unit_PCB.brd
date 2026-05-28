@@ -3,7 +3,7 @@
 <eagle version="9.6.2">
 <drawing>
 <settings>
-<setting alwaysvectorfont="yes"/>
+<setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="0.127" unitdist="mm" unit="mm" style="lines" multiple="1" display="no" altdistance="5" altunitdist="mil" altunit="mil"/>
@@ -271,10 +271,10 @@
 <text x="37.5118" y="3.041" size="1" layer="25">LISV - COAM
 Mely GALVEZ
 2026-05-25</text>
-<dimension x1="60" y1="110" x2="60" y2="0" x3="65.015" y3="55" textsize="1.778" layer="20"/>
-<dimension x1="0" y1="110" x2="60" y2="110" x3="30" y3="113.284" textsize="1.778" layer="20"/>
-<dimension x1="56" y1="4" x2="4" y2="4" x3="30" y3="-5.3949625" textsize="1.778" layer="20" dtype="diameter"/>
-<dimension x1="4" y1="106" x2="4" y2="4" x3="-3.61336875" y3="55" textsize="1.778" layer="20" dtype="diameter"/>
+<dimension x1="60" y1="110" x2="60" y2="0" x3="65.015" y3="55" textsize="1.778" layer="27"/>
+<dimension x1="0" y1="110" x2="60" y2="110" x3="30" y3="113.284" textsize="1.778" layer="27"/>
+<dimension x1="56" y1="4" x2="4" y2="4" x3="30" y3="-5.3949625" textsize="1.778" layer="27" dtype="diameter"/>
+<dimension x1="4" y1="106" x2="4" y2="4" x3="-3.61336875" y3="55" textsize="1.778" layer="27" dtype="diameter"/>
 </plain>
 <libraries>
 <library name="Connectors" urn="urn:adsk.eagle:library:28493002">

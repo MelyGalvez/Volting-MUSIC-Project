@@ -1,0 +1,6 @@
+Partlist exported from C:/Users/Administrator/Documents/EAGLE/projects/IMU_PCB_Breakout/IMU_PCB_Breakout.sch at 28/05/2026 18:37
+
+Qty Value  Device           Package   Parts          Description                                                                                                     PROD_ID    SF_ID     SKU      
+4          CONN_02JST-PTH-2 JST-2-PTH J1, J2, J3, J4 Multi connection point. Often used as Generic Header-pin footprint for 0.1 inch spaced/style header connections CONN-09863           PRT-09914
+1          CONN_04JST-PTH   JST-4-PTH J5             Multi connection point. Often used as Generic Header-pin footprint for 0.1 inch spaced/style header connections WIRE-13531 PRT-09916          
+1   BNO055 BNO055           BNO055    U$1                                                                                                                                                          
