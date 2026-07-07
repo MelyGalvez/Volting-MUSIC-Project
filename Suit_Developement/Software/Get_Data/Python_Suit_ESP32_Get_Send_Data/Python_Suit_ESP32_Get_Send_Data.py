@@ -7,6 +7,9 @@ ESP32 = "http://192.168.4.1"
 
 led_state = False
 
+# Empêche deux requêtes HTTP en même temps
+http_lock = threading.Lock()
+
 
 # ================= LED TOGGLE =================
 def toggle_led():
@@ -16,38 +19,42 @@ def toggle_led():
     value = 1 if led_state else 0
 
     try:
-        requests.get(
-            f"{ESP32}/led?on={value}",
-            timeout=2
-        )
-        print("\nLED =", led_state)
+        with http_lock:
+            r = requests.get(
+                f"{ESP32}/led?on={value}",
+                timeout=2
+            )
+
+        print(f"LED = {led_state} | HTTP {r.status_code}")
 
     except Exception as e:
         print("[LED ERROR]", e)
 
 
-# ================= KEYBOARD THREAD =================
-def keyboard_task():
-    while True:
-        keyboard.wait("space")
-        print("Space detected")
-        toggle_led()
+# ================= KEYBOARD =================
+def on_press(key):
+    try:
+        if key == keyboard.Key.space:
+            print("Space detected")
+            toggle_led()
+    except Exception as e:
+        print(e)
 
 
-threading.Thread(
-    target=keyboard_task,
-    daemon=True
-).start()
+listener = keyboard.Listener(on_press=on_press)
+listener.daemon = True
+listener.start()
 
 
 # ================= MAIN LOOP =================
 while True:
 
     try:
-        r = requests.get(
-            f"{ESP32}/data",
-            timeout=5
-        )
+        with http_lock:
+            r = requests.get(
+                f"{ESP32}/data",
+                timeout=5
+            )
 
         data = r.json()
 
@@ -55,48 +62,22 @@ while True:
         action_flag = data.get("action_flag", False)
 
         print("\n===============================================")
-        print("          [ STATUT MULTI-IMU REÇU ]            ")
+        print("          [ STATUT MULTI-IMU RX ]")
 
-        if not imu_readings:
-            print("Avertissement : imu_data vide ou manquant.")
-        else:
-            for i, reading in enumerate(imu_readings):
+        for reading in imu_readings:
+            print(
+                f"CH {reading['channel']} | "
+                f"H={reading['heading']:.1f} "
+                f"P={reading['pitch']:.1f} "
+                f"R={reading['roll']:.1f} "
+                f"Piezo={reading['piezo']}"
+            )
 
-                channel = reading.get("channel", i + 1)
-                heading = reading.get("heading", 0.0)
-                pitch = reading.get("pitch", 0.0)
-                roll = reading.get("roll", 0.0)
-                piezo = reading.get("piezo", 0)
-
-                print(
-                    f"| Canal {channel:<2} "
-                    f"| Heading: {heading:6.1f} "
-                    f"| Pitch: {pitch:6.1f} "
-                    f"| Roll: {roll:6.1f} "
-                    f"| Piezo: {piezo:4d}"
-                )
-
-        print("-" * 50)
-        status = "ACTIVÉ" if action_flag else "INACTIF"
-        print(
-            f"STATUT ACTION GLOBALE : {status} | "
-            f"Timestamp: {data.get('timestamp', 'N/A')}"
-        )
+        print("-----------------------------------------------")
+        print("Action TX:", action_flag)
 
         time.sleep(0.2)
 
-    except requests.exceptions.ConnectionError:
-        print(f"\n[ERREUR] Impossible de joindre ESP32 ({ESP32})")
-        time.sleep(1)
-
-    except requests.exceptions.Timeout:
-        print("\n[ERREUR] Timeout ESP32 (réponse trop lente)")
-        time.sleep(1)
-
-    except ValueError:
-        print("\n[ERREUR] JSON invalide reçu depuis ESP32")
-        time.sleep(1)
-
     except Exception as e:
-        print(f"\n[ERREUR GÉNÉRALE] {e}")
+        print(e)
         time.sleep(1)
