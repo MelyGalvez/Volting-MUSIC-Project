@@ -1,83 +1,60 @@
-import requests
-from pynput import keyboard
-import threading
 import time
+import threading
 
-ESP32 = "http://192.168.4.1"
 
-led_state = False
+import config
+from communication import get_sensor_data
+from keyboard_control import keyboard_listener
+from display import display_sensor_data
+from led_control import toggle_led
 
-# Empêche deux requêtes HTTP en même temps
+
+# ==========================================================
+# MAIN PROGRAM
+# ==========================================================
+
+
 http_lock = threading.Lock()
 
 
-# ================= LED TOGGLE =================
-def toggle_led():
-    global led_state
-
-    led_state = not led_state
-    value = 1 if led_state else 0
-
-    try:
-        with http_lock:
-            r = requests.get(
-                f"{ESP32}/led?on={value}",
-                timeout=2
-            )
-
-        print(f"LED = {led_state} | HTTP {r.status_code}")
-
-    except Exception as e:
-        print("[LED ERROR]", e)
+# ---------------- Keyboard ----------------
 
 
-# ================= KEYBOARD =================
-def on_press(key):
-    try:
-        if key == keyboard.Key.space:
-            print("Space detected")
-            toggle_led()
-    except Exception as e:
-        print(e)
+keyboard_listener(
+    toggle_led
+)
 
 
-listener = keyboard.Listener(on_press=on_press)
-listener.daemon = True
-listener.start()
+# ---------------- Main loop ----------------
 
 
-# ================= MAIN LOOP =================
 while True:
 
     try:
+
         with http_lock:
-            r = requests.get(
-                f"{ESP32}/data",
-                timeout=5
-            )
 
-        data = r.json()
+            data = get_sensor_data()
 
-        imu_readings = data.get("imu_data", [])
-        action_flag = data.get("action_flag", False)
+        display_sensor_data(
+            data
+        )
 
-        print("\n===============================================")
-        print("          [ STATUT MULTI-IMU RX ]")
 
-        for reading in imu_readings:
-            print(
-                f"CH {reading['channel']} | "
-                f"H={reading['heading']:.1f} "
-                f"P={reading['pitch']:.1f} "
-                f"R={reading['roll']:.1f} "
-                f"Piezo={reading['piezo']}"
-            )
+        time.sleep(
+            config.UPDATE_PERIOD
+        )
 
-        print("-----------------------------------------------")
-        print("Action TX:", action_flag)
+    except KeyboardInterrupt:
 
-        time.sleep(0.2)
+        print(
+            "\nProgram stopped"
+        )
+
+        break
 
     except Exception as e:
+
         print(e)
+
         time.sleep(1)
