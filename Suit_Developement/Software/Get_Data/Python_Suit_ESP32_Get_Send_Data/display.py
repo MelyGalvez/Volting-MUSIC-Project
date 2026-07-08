@@ -1,9 +1,9 @@
-# =================================================
+# ==========================================
 # DISPLAY FUNCTIONS
-# =================================================
+# ==========================================
 
 
-# ----------------- Display data ------------------
+# -------------- Display data --------------
 
 
 def display_sensor_data(data: dict | None) -> None:
@@ -47,11 +47,12 @@ def display_sensor_data(data: dict | None) -> None:
 
         print(
             f"CH {reading['channel']} | "
-            f"H={reading['heading']:.1f} "
-            f"P={reading['pitch']:.1f} "
-            f"R={reading['roll']:.1f} "
-            f"Piezo={reading['piezo']}"
-        )
+            f"H={reading['heading']:.1f} | "
+            f"P={reading['pitch']:.1f} | "
+            f"R={reading['roll']:.1f} | "
+            f"PIEZO_L={reading['piezo_left']:.1f} | "
+            f"PIEZO_R={reading['piezo_right']:.1f}"
+    )
 
 
     print("-----------------------------------------------")

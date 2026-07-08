@@ -15,6 +15,6 @@ struct SensorReading
     float heading;
     float pitch;
     float roll;
-
-    int piezo;
+    int piezo_left;
+    int piezo_right;
 };

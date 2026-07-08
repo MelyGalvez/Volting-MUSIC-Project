@@ -6,12 +6,20 @@ import config
 from communication import get_sensor_data
 from keyboard_control import keyboard_listener
 from display import display_sensor_data
-from led_control import toggle_led
+from led_control import (
+    toggle_green,
+    toggle_orange,
+    toggle_red
+)
+from vibration_control import (
+    toggle_left,
+    toggle_right
+)
 
 
-# ==========================================================
+# ==========================================
 # MAIN PROGRAM
-# ==========================================================
+# ==========================================
 
 
 http_lock = threading.Lock()
@@ -21,7 +29,11 @@ http_lock = threading.Lock()
 
 
 keyboard_listener(
-    toggle_led
+    green=toggle_green,
+    orange=toggle_orange,
+    red=toggle_red,
+    left_vibration=toggle_left,
+    right_vibration=toggle_right
 )
 
 
@@ -39,7 +51,6 @@ while True:
         display_sensor_data(
             data
         )
-
 
         time.sleep(
             config.UPDATE_PERIOD

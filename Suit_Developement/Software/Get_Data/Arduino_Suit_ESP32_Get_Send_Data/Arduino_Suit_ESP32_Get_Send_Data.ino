@@ -29,7 +29,7 @@ void setup()
 
     Serial.println();
     Serial.println("==============================");
-    Serial.println(" ESP32 MIDI SYSTEM START ");
+    Serial.println(" ESP32 GET - SEND START ");
     Serial.println("==============================");
 
     // ----------------- Hardware -----------------

@@ -1,7 +1,6 @@
-#include "server.h"
-
 #include <Arduino.h>
 
+#include "server.h"
 #include "globals.h"
 #include "handlers.h"
 

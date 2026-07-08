@@ -5,9 +5,9 @@
 #include "json.h"
 
 
-// ==========================================================
+// ================================================
 // HANDLERS.cpp
-// ==========================================================
+// ================================================
 
 
 // --------- Sensor data request handler ----------
@@ -55,18 +55,42 @@ void handleLedRequest()
 {
     Serial.println("\n[HTTP] /led");
 
-    if (server.hasArg("on"))
+    if (server.hasArg("green"))
     {
-        bool state = server.arg("on") == "1";
+        bool state = server.arg("green") == "1";
 
         digitalWrite(
-            LED_PIN,
+            LED_G_PIN,
             state
         );
 
-        actionTriggered = state;
+        Serial.print("Green LED: ");
+        Serial.println(state ? "ON" : "OFF");
+    }
 
-        Serial.print("LED: ");
+    if (server.hasArg("orange"))
+    {
+        bool state = server.arg("orange") == "1";
+
+        digitalWrite(
+            LED_O_PIN,
+            state
+        );
+
+        Serial.print("Orange LED: ");
+        Serial.println(state ? "ON" : "OFF");
+    }
+
+    if (server.hasArg("red"))
+    {
+        bool state = server.arg("red") == "1";
+
+        digitalWrite(
+            LED_R_PIN,
+            state
+        );
+
+        Serial.print("Red LED: ");
         Serial.println(state ? "ON" : "OFF");
     }
 

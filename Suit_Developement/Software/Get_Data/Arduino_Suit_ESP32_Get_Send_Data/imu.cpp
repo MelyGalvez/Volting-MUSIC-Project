@@ -109,11 +109,13 @@ void captureIMUData()
 
     // ----------------- Piezo  -------------------
 
-    int piezo = analogRead(PIEZO_PIN);
+    int piezoLeft = analogRead(PIEZO_LEFT_PIN);
+    int piezoRight = analogRead(PIEZO_RIGHT_PIN);
 
-    for (uint8_t i = 0; i < NUM_IMUS; i++)
+    for (int i = 0; i < NUM_IMUS; i++)
     {
-        allReadings[i].piezo = piezo;
+        allReadings[i].piezo_left = piezoLeft;
+        allReadings[i].piezo_right = piezoRight;
     }
 
     Serial.println("[CAPTURE] END");

@@ -16,8 +16,13 @@ void initializeGPIO()
 {
     // ------------------ LED ---------------------
 
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
+    pinMode(LED_R_PIN, OUTPUT);
+    pinMode(LED_O_PIN, OUTPUT);
+    pinMode(LED_G_PIN, OUTPUT);
+
+    digitalWrite(LED_R_PIN, LOW);
+    digitalWrite(LED_O_PIN, LOW);
+    digitalWrite(LED_G_PIN, LOW);
 
     // ------------- Vibration motors -------------
 
@@ -29,5 +34,6 @@ void initializeGPIO()
 
     // ---------------- Piezo ----------------
 
-    pinMode(PIEZO_PIN, INPUT);
+    pinMode(PIEZO_LEFT_PIN, INPUT);
+    pinMode(PIEZO_RIGHT_PIN, INPUT);
 }

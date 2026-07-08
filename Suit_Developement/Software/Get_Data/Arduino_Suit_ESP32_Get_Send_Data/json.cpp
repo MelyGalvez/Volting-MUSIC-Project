@@ -46,8 +46,12 @@ String buildJson()
         json += String(reading.roll, 2);
         json += ",";
 
-        json += "\"piezo\":";
-        json += String(reading.piezo);
+        json += "\"piezo_left\":";
+        json += String(reading.piezo_left);
+        json += ",";
+
+        json += "\"piezo_right\":";
+        json += String(reading.piezo_right);
         
         json += "}";
 

@@ -3,22 +3,30 @@ import requests
 import config
 
 
-# =================================================
+# ==========================================
 # COMMUNICATION
-# =================================================
+# ==========================================
 
 
-# ------------------ Send data  -------------------
+# ---------------- Send data  --------------
 
 
-def send_led(state: bool) -> bool:
+def send_led(
+    green: bool = False,
+    orange: bool = False,
+    red: bool = False
+) -> bool:
     """
-    Send LED state to ESP32.
+    Send LED states to ESP32.
 
     Parameters
     ----------
-    state : bool
-        LED state.
+    green : bool
+        Green LED state.
+    orange : bool
+        Orange LED state.
+    red : bool
+        Red LED state.
 
     Returns
     -------
@@ -26,27 +34,73 @@ def send_led(state: bool) -> bool:
         True if request succeeded.
     """
 
-    value = 1 if state else 0
-
     try:
+
         response = requests.get(
-            f"{config.ESP32}/led?on={value}",
+            f"{config.ESP32}/led"
+            f"?green={int(green)}"
+            f"&orange={int(orange)}"
+            f"&red={int(red)}",
             timeout=config.REQUEST_TIMEOUT
         )
 
         print(
-            f"LED = {state} | HTTP {response.status_code}"
+            f"LED -> G:{green} O:{orange} R:{red} | "
+            f"HTTP {response.status_code}"
         )
 
         return True
 
     except Exception as e:
+
         print("[LED ERROR]", e)
+
+        return False
+    
+def send_vibration(
+    left: bool = False,
+    right: bool = False,
+) -> bool:
+    """
+    Send vibration states to ESP32.
+
+    Parameters
+    ----------
+    left : bool
+        Left vibrator state.
+    right : bool
+        Right vibrator state.
+
+    Returns
+    -------
+    bool
+        True if request succeeded.
+    """
+
+    try:
+
+        response = requests.get(
+            f"{config.ESP32}/vibration"
+            f"?left={int(left)}"
+            f"&right={int(right)}",
+            timeout=config.REQUEST_TIMEOUT
+        )
+
+        print(
+            f"Vibration -> Left:{left} Right:{right} | "
+            f"HTTP {response.status_code}"
+        )
+
+        return True
+
+    except Exception as e:
+
+        print("[VIBRATION ERROR]", e)
 
         return False
 
 
-# ------------------- Receive data ----------------
+# -------------- Receive data --------------
 
 
 def get_sensor_data() -> dict | None:
