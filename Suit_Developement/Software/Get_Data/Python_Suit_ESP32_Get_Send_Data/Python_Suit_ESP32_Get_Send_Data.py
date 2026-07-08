@@ -3,8 +3,15 @@ import threading
 
 
 import config
-from communication import get_sensor_data
-from keyboard_control import keyboard_listener
+from communication import (
+    get_sensor_data,
+    send_led,
+    send_vibration
+)
+from keyboard_control import (
+    keyboard_listener,
+    stop_keyboard_listener
+)
 from display import display_sensor_data
 from led_control import (
     toggle_green,
@@ -40,9 +47,9 @@ keyboard_listener(
 # ---------------- Main loop ----------------
 
 
-while True:
+try:
 
-    try:
+    while True:
 
         with http_lock:
 
@@ -56,16 +63,25 @@ while True:
             config.UPDATE_PERIOD
         )
 
-    except KeyboardInterrupt:
+except KeyboardInterrupt:
 
-        print(
-            "\nProgram stopped"
-        )
+    print("\nProgram stopped")
 
-        break
+except Exception as e:
 
-    except Exception as e:
+    print(e)
 
-        print(e)
+finally:
 
-        time.sleep(1)
+    stop_keyboard_listener()
+
+    send_led(
+        green=False,
+        orange=False,
+        red=False
+    )
+
+    send_vibration(
+        left=False,
+        right=False
+    )

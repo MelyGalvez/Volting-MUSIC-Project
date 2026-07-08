@@ -1,55 +1,10 @@
-from pynput import keyboard
+import keyboard
 from typing import Callable
 
 
 # ==========================================
 # KEYBOARD CONTROL
 # ==========================================
-
-
-# ---------------- Callbacks ---------------
-
-
-green_callback = None
-orange_callback = None
-red_callback = None
-
-left_vibration_callback = None
-right_vibration_callback = None
-
-
-# -------------- Key pressed ---------------
-
-
-def on_press(key):
-    """
-    Keyboard callback.
-    """
-
-    try:
-
-        if key == keyboard.Key.left and left_vibration_callback:
-            left_vibration_callback()
-
-        elif key == keyboard.Key.right and right_vibration_callback:
-            right_vibration_callback()
-
-        elif hasattr(key, "char"):
-
-            key = key.char.lower()
-
-            if key == "g" and green_callback:
-                green_callback()
-
-            elif key == "o" and orange_callback:
-                orange_callback()
-
-            elif key == "r" and red_callback:
-                red_callback()
-
-    except Exception as e:
-
-        print(e)
 
 
 # ------------ Keyboard listener -----------
@@ -66,22 +21,28 @@ def keyboard_listener(
     Start keyboard listener.
     """
 
-    global green_callback
-    global orange_callback
-    global red_callback
-    global left_vibration_callback
-    global right_vibration_callback
+    if green is not None:
+        keyboard.add_hotkey("g", green)
 
-    green_callback = green
-    orange_callback = orange
-    red_callback = red
+    if orange is not None:
+        keyboard.add_hotkey("o", orange)
 
-    left_vibration_callback = left_vibration
-    right_vibration_callback = right_vibration
+    if red is not None:
+        keyboard.add_hotkey("r", red)
 
-    listener = keyboard.Listener(
-        on_press=on_press
-    )
+    if left_vibration is not None:
+        keyboard.add_hotkey("left", left_vibration)
 
-    listener.daemon = True
-    listener.start()
+    if right_vibration is not None:
+        keyboard.add_hotkey("right", right_vibration)
+
+
+# ------------ Stop listener ---------------
+
+
+def stop_keyboard_listener() -> None:
+    """
+    Stop keyboard listener.
+    """
+
+    keyboard.unhook_all_hotkeys()
