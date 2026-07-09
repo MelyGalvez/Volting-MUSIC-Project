@@ -36,7 +36,7 @@ try:
 
         r = requests.get(
             config.ESP32 + "/data",
-            timeout=2
+            timeout=5
         )
 
         data = r.json()
@@ -182,7 +182,7 @@ try:
             end="\r"
         )
 
-        time.sleep(0.05)
+        time.sleep(0.01)
 
 
 except tk.TclError:
