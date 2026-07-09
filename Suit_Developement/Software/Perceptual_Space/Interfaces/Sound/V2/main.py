@@ -42,11 +42,22 @@ try:
         data = r.json()
 
         imus = {}
-
+        
         for imu in data["imu_data"]:
-            imus[imu["channel"]] = imu
-
-        if len(imus) < 8:
+            imus[imu["body"]] = imu
+        
+        required = [
+            "back_upper",
+            "back_lower",
+            "left_arm",
+            "right_arm",
+            "left_forearm",
+            "right_forearm",
+            "left_hand",
+            "right_hand"
+        ]
+        
+        if not all(body in imus for body in required):
             continue
 
         # =====================================================
@@ -54,8 +65,8 @@ try:
         # =====================================================
 
         back_angle = (
-            imus[0]["pitch"] +
-            imus[1]["pitch"]
+            imus["back_upper"]["pitch"] +
+            imus["back_lower"]["pitch"]
         ) / 2
 
         octave = mapping.map_octave(
@@ -67,11 +78,11 @@ try:
         # =====================================================
 
         left_note = mapping.map_note(
-            imus[2]["pitch"]
+            imus["left_arm"]["pitch"]
         )
-
+        
         right_note = mapping.map_note(
-            imus[3]["pitch"]
+            imus["right_arm"]["pitch"]
         )
 
         left_midi = mapping.build_midi_note(
@@ -90,13 +101,13 @@ try:
 
         player.set_left_volume(
             mapping.map_volume(
-                imus[6]["roll"]
+                imus["left_hand"]["roll"]
             )
         )
-
+        
         player.set_right_volume(
             mapping.map_volume(
-                imus[7]["roll"]
+                imus["right_hand"]["roll"]
             )
         )
 
@@ -106,13 +117,13 @@ try:
 
         player.set_left_reverb(
             mapping.map_reverb(
-                imus[4]["pitch"]
+                imus["left_forearm"]["pitch"]
             )
         )
-
+        
         player.set_right_reverb(
             mapping.map_reverb(
-                imus[5]["pitch"]
+                imus["right_forearm"]["pitch"]
             )
         )
 
@@ -135,7 +146,7 @@ try:
         # =====================================================
 
         if mapping.detect_left_hit(
-            imus[6]["piezo_left"]
+            imus["left_hand"]["piezo_left"]
         ):
 
             player.play_drum(
@@ -145,7 +156,7 @@ try:
             )
 
         if mapping.detect_right_hit(
-            imus[7]["piezo_right"]
+            imus["right_hand"]["piezo_right"]
         ):
 
             player.play_drum(
