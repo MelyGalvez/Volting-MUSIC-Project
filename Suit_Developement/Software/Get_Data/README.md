@@ -102,9 +102,9 @@ Each sensor is then referenced to its own initial orientation, allowing all repo
 
 | LED | Meaning |
 |------|---------|
-| 🟡 Yellow | System initialization / calibration in progress |
-| 🟢 Green | System ready |
-| 🔴 Red | One or more IMUs failed during initialization |
+| Yellow | System initialization / calibration in progress |
+| Green | System ready |
+| Red | One or more IMUs failed during initialization |
 
 ---
 
