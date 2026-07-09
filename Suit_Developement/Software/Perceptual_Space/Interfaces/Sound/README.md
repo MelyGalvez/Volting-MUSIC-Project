@@ -11,7 +11,7 @@ Each version of the software is designed to work with the corresponding version 
 
 ---
 
-# Music V1 – Dual Hand Musical Interface
+# Sound V1 – Dual Hand Musical Interface
 
 ## Description
 
@@ -73,7 +73,7 @@ The piezo sensors trigger percussion sounds while the hand orientation continuou
 
 ---
 
-# Music V2 – Full Body Musical Interface
+# Sound V2 – Full Body Musical Interface
 
 ## Description
 
