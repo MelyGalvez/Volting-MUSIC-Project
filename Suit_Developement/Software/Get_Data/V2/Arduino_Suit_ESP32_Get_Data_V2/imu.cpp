@@ -1,7 +1,6 @@
-#include "imu.h"
-
 #include <Wire.h>
 
+#include "imu.h"
 #include "config.h"
 #include "global.h"
 #include "gpio.h"
@@ -9,14 +8,14 @@
 #include "status.h"
 #include "orientation.h"
 
-// ======================================================
-// IMU
-// ======================================================
+
+// ================================================
+// IMU.cpp
+// ================================================
 
 
-// ======================================================
-// Initialize IMUs
-// ======================================================
+// --------------- Initialize IMUs ----------------
+
 
 void initializeIMUs()
 {
@@ -66,6 +65,10 @@ void initializeIMUs()
     }
 }
 
+
+// ---------------- IMU detection -----------------
+
+
 bool allIMUsDetected()
 {
     for(uint8_t i=0;i<NUM_IMUS;i++)
@@ -78,6 +81,10 @@ bool allIMUsDetected()
 
     return true;
 }
+
+
+// ------------------ IMU reading -----------------
+
 
 bool readIMU(
     uint8_t index,
@@ -117,6 +124,10 @@ bool readIMU(
 
     return true;
 }
+
+
+// --------------- IMU acquisition ----------------
+
 
 void captureIMUs()
 {

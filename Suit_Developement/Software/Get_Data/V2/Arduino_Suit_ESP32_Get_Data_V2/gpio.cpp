@@ -1,16 +1,19 @@
 #include "gpio.h"
 #include "config.h"
 
-// ======================================================
-// GPIO
-// ======================================================
+
+// ================================================
+// GPIO.cpp
+// ================================================
 
 
-// ================= Initialization =====================
+// ---------------- Initialization ----------------
+
 
 void initializeGPIO()
 {
-    // -------- LEDs --------
+
+    // ------------------- LEDs -------------------
 
     pinMode(LED_RED_PIN, OUTPUT);
     pinMode(LED_YELLOW_PIN, OUTPUT);
@@ -20,14 +23,15 @@ void initializeGPIO()
     setYellowLED(false);
     setGreenLED(false);
 
-    // -------- Piezos ------
+    // ------------------ Piezos ------------------
 
     pinMode(PIEZO_LEFT_PIN, INPUT);
     pinMode(PIEZO_RIGHT_PIN, INPUT);
 }
 
 
-// ================= LEDs ===============================
+// --------------------- LEDs ---------------------
+
 
 void setRedLED(bool state)
 {
@@ -45,7 +49,8 @@ void setGreenLED(bool state)
 }
 
 
-// ================= Piezos =============================
+// -------------------- Piezos --------------------
+
 
 int readLeftPiezo()
 {

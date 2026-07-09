@@ -1,14 +1,15 @@
-#include "calibration.h"
-
 #include <Arduino.h>
 
+#include "calibration.h"
 #include "global.h"
 #include "imu.h"
 #include "status.h"
 
-// ======================================================
-// CALIBRATION
-// ======================================================
+
+// ================================================
+// CALIBRATION.cpp
+// ================================================
+
 
 void calibrateIMUs()
 {

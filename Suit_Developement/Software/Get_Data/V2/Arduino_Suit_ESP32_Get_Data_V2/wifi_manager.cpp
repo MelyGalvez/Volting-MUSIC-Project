@@ -1,14 +1,18 @@
-#include "wifi_manager.h"
-
 #include <WiFi.h>
 
+#include "wifi_manager.h"
 #include "config.h"
 #include "global.h"
 #include "status.h"
 
-// ======================================================
-// WIFI MANAGER
-// ======================================================
+
+// ================================================
+// WIFI_MANAGER.cpp
+// ================================================
+
+
+// -------------- Initialisation ------------------
+
 
 void initializeWiFi()
 {
@@ -17,9 +21,7 @@ void initializeWiFi()
     Serial.println("Initializing WiFi");
     Serial.println("===============================");
 
-    //----------------------------------------------------
-    // Access Point
-    //----------------------------------------------------
+    // --------------- Access point ---------------
 
     bool success = WiFi.softAP(
         WIFI_SSID,
@@ -35,9 +37,7 @@ void initializeWiFi()
         return;
     }
 
-    //----------------------------------------------------
-    // Information
-    //----------------------------------------------------
+    // ---------------- Information ---------------
 
     Serial.print("SSID : ");
     Serial.println(WIFI_SSID);

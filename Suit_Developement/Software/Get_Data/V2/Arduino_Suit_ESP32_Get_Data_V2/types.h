@@ -2,12 +2,14 @@
 
 #include <Arduino.h>
 
-// ======================================================
-// TYPES
-// ======================================================
+
+// ================================================
+// TYPES.h
+// ================================================
 
 
-// ================= Body parts ==========================
+// ---------------- Body parts --------------------
+
 
 enum BodyPart : uint8_t
 {
@@ -25,7 +27,8 @@ enum BodyPart : uint8_t
 };
 
 
-// ================= System states =======================
+// --------------- System states ------------------
+
 
 enum SystemState : uint8_t
 {
@@ -36,7 +39,8 @@ enum SystemState : uint8_t
 };
 
 
-// ================= Euler angles ========================
+// --------------- Euler angles -------------------
+
 
 struct EulerAngles
 {
@@ -46,7 +50,8 @@ struct EulerAngles
 };
 
 
-// ================= Calibration offsets =================
+// ------------ Calibration offsets ---------------
+
 
 struct CalibrationOffset
 {
@@ -56,7 +61,8 @@ struct CalibrationOffset
 };
 
 
-// ================= IMU state ===========================
+// --------------- IMU states -------------------
+
 
 struct IMUStatus
 {
@@ -65,7 +71,8 @@ struct IMUStatus
 };
 
 
-// ================= Sensor reading ======================
+// -------------- Sensors reading -----------------
+
 
 struct SensorReading
 {

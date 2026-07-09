@@ -2,14 +2,17 @@
 
 #include <Arduino.h>
 
-// ======================================================
-// IMU
-// ======================================================
+
+// ================================================
+// IMU.h
+// ================================================
+
 
 /**
  * @brief Initialize every BNO055.
  */
 void initializeIMUs();
+
 
 /**
  * @brief Read one IMU.
@@ -28,10 +31,12 @@ bool readIMU(
     float& roll
 );
 
+
 /**
  * @brief Read every IMU.
  */
 void captureIMUs();
+
 
 /**
  * @brief Return true if every IMU has been detected.

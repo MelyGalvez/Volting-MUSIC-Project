@@ -1,13 +1,14 @@
 #include "json.h"
-
 #include "global.h"
 
-// ======================================================
-// JSON
-// ======================================================
+
+// ================================================
+// JSON.cpp
+// ================================================
 
 
-// ---------- Convert body part to string ----------
+// ---------- Convert body part to string ---------
+
 
 static String bodyName(BodyPart body)
 {
@@ -30,7 +31,8 @@ static String bodyName(BodyPart body)
 }
 
 
-// ---------- Convert system state ----------
+// ------------- Convert system state -------------
+
 
 static String stateName(SystemState state)
 {
@@ -54,31 +56,26 @@ static String stateName(SystemState state)
 }
 
 
-// ---------- JSON generation ----------
+// ---------------- JSON generation ---------------
+
 
 String buildJson()
 {
     String json = "{";
 
-    // ==========================================
-    // Timestamp
-    // ==========================================
+    // ---------------- Timestamp -----------------
 
     json += "\"timestamp\":";
     json += millis();
     json += ",";
 
-    // ==========================================
-    // System state
-    // ==========================================
+    // -------------- System state ----------------
 
     json += "\"system\":\"";
     json += stateName(systemState);
     json += "\",";
 
-    // ==========================================
-    // IMUs
-    // ==========================================
+    // ------------------ IMUs --------------------
 
     json += "\"imu_data\":[";
 

@@ -1,8 +1,13 @@
 #include "orientation.h"
 
-// ======================================================
-// ORIENTATION
-// ======================================================
+
+// ================================================
+// ORIENTATION.cpp
+// ================================================
+
+
+// ------------- Orientation table ----------------
+
 
 Orientation imuOrientation[NUM_IMUS] =
 {
@@ -32,6 +37,9 @@ Orientation imuOrientation[NUM_IMUS] =
 };
 
 
+// ---------------- Axis selection ----------------
+
+
 static float axisValue(
     Axis axis,
     float x,
@@ -46,6 +54,10 @@ static float axisValue(
         default:     return z;
     }
 }
+
+
+// -------------- Apply orientation ---------------
+
 
 void applyOrientation(
     uint8_t index,

@@ -3,9 +3,11 @@
 #include <Arduino.h>
 #include "config.h"
 
-// ======================================================
-// ORIENTATION
-// ======================================================
+
+// ================================================
+// ORIENTATION.cpp
+// ================================================
+
 
 enum Axis : uint8_t
 {
@@ -13,6 +15,7 @@ enum Axis : uint8_t
     AXIS_Y,
     AXIS_Z
 };
+
 
 struct Orientation
 {
@@ -25,7 +28,9 @@ struct Orientation
     bool invertRoll;
 };
 
+
 extern Orientation imuOrientation[NUM_IMUS];
+
 
 /**
  * @brief Apply the orientation mapping of one IMU.
