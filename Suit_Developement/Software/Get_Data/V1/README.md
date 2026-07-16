@@ -211,11 +211,6 @@ V1/
 - **Interaction:** it produces the data that the Python side consumes, and it
   obeys the commands the Python side sends.
 
-> **Why so many files?** The firmware is split by *topic* so that each concern
-> can be understood on its own. A `.h` ("header") file announces *what a module
-> offers*; the matching `.cpp` file contains the *actual work*. This is a
-> normal way to keep C++ projects organized. Every file is explained in
-> [Section 4](#4-file-explanation).
 
 ### `Python_Suit_ESP32_Get_Send_Data_V1/`
 
@@ -226,9 +221,6 @@ V1/
 - **Interaction:** it connects to the suit's Wi-Fi, requests data, and sends
   commands.
 
-> The `__pycache__/` folder is **not source code**. Python automatically
-> creates it to store a pre-compiled copy of each module so the program starts
-> faster. You can safely ignore or delete it; it will be regenerated.
 
 ---
 

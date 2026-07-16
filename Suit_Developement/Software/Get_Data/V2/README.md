@@ -1,10 +1,7 @@
-# Music Suit — Version 2
+# Get Data — V2
+### Wearable Motion Suit — ESP32 Firmware + Python Client
 
-**Data acquisition firmware and client for an 8-sensor wearable motion-capture suit.**
-
-This document explains how Version 2 works internally. It is written for someone who has never seen this project before and does not assume prior knowledge of embedded programming, networking, HTTP, JSON, or robotics. Every concept is introduced before it is used.
-
-Everything below describes **what the V2 source code actually does**. Where the code does not answer a question, this document says so explicitly rather than guessing. Those points are collected in [Section 15](#15-what-the-code-does-not-determine).
+---
 
 ---
 
