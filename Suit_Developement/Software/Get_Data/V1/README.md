@@ -1,28 +1,6 @@
 # Get Data — V1
 ### Wearable Motion Suit — ESP32 Firmware + Python Client
 
-This document explains **how this project works on the inside**.
-
-It is written for someone who has **never seen the project** and who is **not
-necessarily an experienced programmer**. Every important idea is introduced
-before it is used, and every important file is explained. When you finish
-reading, you should understand where the data comes from, how it travels, who
-processes it, and who displays it — **without having to open a single source
-file**.
-
-> **Scope of this README.**
-> This folder (`V1`) is the *first version* of a larger effort. The parent
-> folder `Get_Data/` also contains `V2` and `V3`, which add features such as
-> automatic calibration. **This README documents V1 only** — the behaviour
-> described here is exactly what the V1 source code does, nothing more.
-
-> **A note on honesty.**
-> The guideline for this document asks that anything uncertain be stated
-> openly rather than guessed. Wherever the code does something surprising, or
-> where the physical hardware behaviour cannot be proven from the source alone,
-> you will find a **⚠️ Note** box. A consolidated list is given in
-> [Section 15 — Known Limitations & Uncertainties](#15-known-limitations--uncertainties).
-
 ---
 
 ## Table of Contents
@@ -41,7 +19,6 @@ file**.
 12. [Error Handling](#12-error-handling)
 13. [Configuration](#13-configuration)
 14. [Architecture Summary](#14-architecture-summary)
-15. [Known Limitations & Uncertainties](#15-known-limitations--uncertainties)
 
 ---
 
@@ -1324,61 +1301,5 @@ flowchart LR
     end
     S3 <-->|"Wi-Fi + HTTP + JSON"| P2
 ```
-
----
-
-## 15. Known Limitations & Uncertainties
-
-In keeping with the goal of *reverse engineering honestly*, here is a single
-list of everything that is either a limitation of V1 or that **cannot be proven
-from the source code alone**. None of these were changed — they are reported as
-found.
-
-1. **Multiplexer channel 0 (off-by-one).** The read loops use channels `0..7`,
-   but `selectMuxChannel()` ignores `0` and selects lines with `1 << channel`.
-   The strong inference (supported by the parent README's example, where `CH 0`
-   equals `CH 7`) is that "sensor 0" re-reads the last-selected sensor rather
-   than a distinct one, and that only lines 1–7 are ever selected. The exact
-   hardware outcome depends on physical wiring that the source does not show.
-   *(See [Section 11](#11-algorithms).)*
-
-2. **`action_flag` is always `false`.** The `actionTriggered` flag is read but
-   never set to `true` in V1, so this field carries no information yet. It looks
-   like a reserved placeholder. *(See [Section 4](#4-file-explanation).)*
-
-3. **`FIRST_IMU_CHANNEL` is unused.** Defined in `config.h`, referenced nowhere.
-   Its intended meaning is unknown.
-
-4. **No real per-sensor error detection.** `readIMUData()` always returns
-   `true`; a missing or silent sensor still produces an entry, so bad data can
-   look valid. *(See [Section 12](#12-error-handling).)*
-
-5. **Piezo values are shared across all channels.** Both piezo sensors are read
-   once per cycle and the same two numbers are copied into all eight readings.
-   This is by design, but it means the per-channel `piezo_left`/`piezo_right`
-   fields do not represent eight independent measurements.
-
-6. **Euler axis labelling.** The mapping of the sensor's three returned values to
-   `heading`/`pitch`/`roll` is taken at face value; confirming each corresponds
-   to the intended physical axis needs hardware testing. *(See
-   [Section 11](#11-algorithms).)*
-
-7. **Partial locking on the client.** `http_lock` guards the data poll but not
-   the keyboard-triggered commands, so overlapping requests are not strictly
-   prevented. *(See [Section 12](#12-error-handling).)*
-
-8. **No IMU-to-body-part mapping in V1.** V1 reports sensors only by numeric
-   channel. Which channel sits on which body part is not encoded in this
-   version's code (later versions add named body parts).
-
-9. **The "~30 s warm-up" figure** comes from the parent folder's usage notes,
-   not from any timer in the V1 source. The firmware's own explicit delays are
-   only a few milliseconds each.
-
-10. **External requirements are implied, not declared.** The firmware needs the
-    Arduino `Adafruit_BNO055` (and its dependencies) and the ESP32 `WiFi` /
-    `WebServer` libraries; the Python client needs `requests` and `keyboard`.
-    There is no `requirements.txt` or library manifest in the V1 folder, so
-    these are inferred from the `import`/`#include` lines.
 
 ---
