@@ -1,20 +1,5 @@
-# ESP32 Motion Suit — Sensor Data Server (V3)
-
-This folder contains the firmware for a wearable motion-capture suit built around an
-ESP32 microcontroller, eight orientation sensors and two piezo sensors.
-
-The firmware has exactly one job: **acquire sensor data and expose it over a simple
-HTTP interface**. It does not draw anything, does not interpret gestures, does not
-make sound, and does not know or care what is listening to it. Anything capable of
-sending an HTTP request — Python, Unity, TouchDesigner, Max/MSP, Processing, Unreal
-Engine, a web page — can consume it.
-
-Think of it as a small sensor *web server* that you strap to a body.
-
-This README is written for someone who has never seen the project and is not
-necessarily an embedded programmer. Every concept is introduced before it is used,
-and everything described here was verified against the source in
-`Arduino_Suit_ESP32_Get_Data_V3/`.
+# Get Data — V3
+### Wearable Motion Suit — ESP32 Firmware
 
 ---
 
@@ -223,38 +208,10 @@ The tree is deliberately flat — there are only two levels.
 ```
 V3/
 ├── README.md                          ← this document
-├── DOCUMENTATION_GUIDELINES.md        ← house style for writing this README
 └── Arduino_Suit_ESP32_Get_Data_V3/    ← the sketch; this is what gets compiled
-    ├── Arduino_Suit_ESP32_Get_Data_V3.ino
-    ├── config.h
-    ├── types.h
-    ├── global.h / global.cpp
-    ├── gpio.h / gpio.cpp
-    ├── mux.h / mux.cpp
-    ├── imu.h / imu.cpp
-    ├── orientation.h / orientation.cpp
-    ├── quat.h
-    ├── calibration.h / calibration.cpp
-    ├── status.h / status.cpp
-    ├── wifi_manager.h / wifi_manager.cpp
-    ├── server.h / server.cpp
-    ├── handlers.h / handlers.cpp
-    └── json.h / json.cpp
+
 ```
 
-**Why the folder name repeats the file name.** The Arduino toolchain requires a sketch
-folder to contain a `.ino` file of exactly the same name — that file is the entry point.
-Every other `.cpp` in the folder is compiled and linked automatically; there is no
-makefile and nothing to configure.
-
-**Why so many small files.** Each file owns exactly one concern, and the concerns are
-layered: hardware access at the bottom, maths in the middle, network at the top. That
-layering is what makes the [dependency graph](#6-communication-between-files) a clean tree
-rather than a knot.
-
-**A note on the two `.md` files.** `DOCUMENTATION_GUIDELINES.md` describes how this README
-should be written. It is documentation *about* documentation and has no effect on the
-firmware.
 
 ---
 
@@ -867,30 +824,7 @@ eight entries shown (the other six follow the same shape):
 | `piezo_left` | integer | Raw `analogRead()` of GPIO 34. |
 | `piezo_right` | integer | Raw `analogRead()` of GPIO 35. |
 
-#### Four things a consumer must know
 
-1. **The piezos are not per body part.** Both pins are read once per request and the same
-   two values are written into all eight entries. `imu_data[0].piezo_left` and
-   `imu_data[7].piezo_left` are always identical — it is one global pair repeated eight
-   times, not eight separate sensors. Read them from any entry.
-2. **An undetected sensor still gets a full entry**, carrying `detected: false` and the
-   default values (`qw: 1.0000`, the rest `0.00`). Always check `detected` before believing
-   a number: zeros here mean "no data", not "not moving".
-3. **Uncalibrated data is absolute, not broken.** If calibration was skipped, the offsets
-   are all zero and the quaternion reference is the identity — so the maths passes the raw
-   sensor values straight through. You get real orientations, just measured against the
-   sensors' own reference (magnetic north and gravity) rather than the wearer's T-pose.
-   `calibrated: false` tells you which you are looking at.
-4. **No CORS headers are sent.** The firmware sets no `Access-Control-Allow-Origin`, so a
-   browser page served from another origin will be blocked from reading `/data` by the
-   browser itself. Native apps, Python, Unity and friends are unaffected.
-
-#### The piezo scale
-
-The sketch never calls `analogReadResolution()`, so the values are whatever the ESP32 core
-produces by default — 12-bit, i.e. **0–4095**, on the standard ESP32 core. The firmware
-applies no threshold, no filtering and no scaling: what the pin reads is what you get.
-Deciding what counts as a "hit" is the consumer's job.
 
 ---
 
@@ -928,10 +862,6 @@ reported_heading = current_heading − imuOffsets[i].heading
 
 In the T-pose all three come out ~0. Move, and they measure the departure from it.
 
-*The honest caveat:* this is plain subtraction with no wrap-around handling. Nothing in the
-code brings the result back into a range, so `heading − offset` can go negative or exceed
-360 near the wrap point. Fine for a quick look, awkward for continuous rotation — one more
-reason the quaternion is the primary output.
 
 **For quaternions** the same idea, done properly. Rotations do not subtract; they compose,
 and undoing one means composing with its inverse. For a rotation quaternion, the inverse is
@@ -1116,20 +1046,3 @@ fresh at the moment it was asked for, no buffering exists anywhere, and the phys
 each `detected`, check `calibrated`, use the quaternions. That is the entire contract, and
 it is why this repository is a reusable sensor server rather than part of somebody's
 application: **the firmware has no idea who is listening, and never needs to.**
-
----
-
-## Appendix: known quirks
-
-Small things that are surprising if you have read the source, all confirmed against the
-code and all harmless:
-
-- The boot banner says `ESP32 MUSIC SUIT V2`, in the V3 sketch.
-- `allIMUsDetected()` (`imu.h` / `imu.cpp`) is fully implemented and never called.
-- The yellow-blink branch of `updateStatus()` is unreachable: calibration happens inside a
-  blocking `delay()` in `setup()`, so the state is never `SYSTEM_CALIBRATION` while
-  `loop()` is running.
-- `imuOrientation[]` is identity for all eight sensors, so `applyOrientation()` currently
-  has no effect.
-- `orientation.h` carries a header comment reading `ORIENTATION.cpp`, and `handlers.h` one
-  reading `HANDLERS.cpp`.

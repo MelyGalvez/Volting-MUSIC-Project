@@ -30,7 +30,7 @@ void setup()
 
     Serial.println();
     Serial.println("==================================");
-    Serial.println("      ESP32 MUSIC SUIT V2");
+    Serial.println("      ESP32 MUSIC SUIT V3");
     Serial.println("==================================");
 
     // ----------------- Hardware -----------------
