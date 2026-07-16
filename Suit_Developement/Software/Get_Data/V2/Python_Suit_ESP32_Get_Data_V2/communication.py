@@ -7,6 +7,7 @@ import config
 # COMMUNICATION
 # ==========================================
 
+
 def get_sensor_data() -> dict | None:
     """
     Read IMU data from the ESP32.

@@ -36,7 +36,7 @@ try:
 
         r = requests.get(
             config.ESP32 + "/data",
-            timeout=5
+            timeout=10
         )
 
         data = r.json()

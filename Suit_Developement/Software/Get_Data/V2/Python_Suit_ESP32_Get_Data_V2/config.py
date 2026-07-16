@@ -12,6 +12,6 @@ ESP32 = "http://192.168.4.1"
 # ------------------ Time ------------------
 
 
-REQUEST_TIMEOUT = 5
+REQUEST_TIMEOUT = 30
 
 UPDATE_PERIOD = 0.05

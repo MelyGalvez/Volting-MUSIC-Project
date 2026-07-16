@@ -5,10 +5,14 @@ from communication import get_sensor_data
 from display import display_sensor_data
 
 
+# ==========================================
+# MAIN
+# ==========================================
+
+
 print("==========================")
 print("ESP32 MUSIC SUIT CLIENT")
 print("==========================")
-
 
 try:
 
