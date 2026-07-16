@@ -81,7 +81,7 @@ first, because the rest of the document relies on them:
 The suit hardware, as far as the code reveals it:
 
 | Part | Quantity | Role |
-|------|----------|------|
+|---|---|---|
 | **ESP32** microcontroller | 1 | The brain on the suit. Reads sensors, runs the Wi-Fi network and the web server. |
 | **BNO055** IMU sensors | 8 | Measure the orientation of eight body parts. |
 | **TCA9548A** I²C multiplexer | 1 | Lets all 8 IMUs share the same two I²C wires by switching between them. |
@@ -197,30 +197,32 @@ The `V1` folder contains two program folders plus this documentation.
 
 ```
 V1/
-├── Arduino_Suit_ESP32_Get_Send_Data_V1/   → Firmware for the ESP32 (C++/Arduino)
-├── Python_Suit_ESP32_Get_Send_Data_V1/    → Client program for the PC (Python)
-└── README.md                              → This document
+├── Arduino_Suit_ESP32_Get_Send_Data_V1/   ← firmware for the ESP32 (C++/Arduino)
+├── Python_Suit_ESP32_Get_Send_Data_V1/    ← client program for the PC (Python)
+└── README.md                              ← this document
 ```
 
 ### `Arduino_Suit_ESP32_Get_Send_Data_V1/`
 
-- **Purpose:** the program that runs *on the suit*.
-- **Contents:** one main sketch (`.ino`) plus several pairs of `.cpp`/`.h`
-  files, each pair handling one responsibility (Wi-Fi, sensors, the web
-  server, and so on).
-- **Interaction:** it produces the data that the Python side consumes, and it
-  obeys the commands the Python side sends.
+**Purpose.** The program that runs *on the suit*.
 
+**Contents.** One main sketch (`.ino`) plus several pairs of `.cpp`/`.h`
+files, each pair handling one responsibility (Wi-Fi, sensors, the web
+server, and so on).
+
+**Interaction.** It produces the data that the Python side consumes, and it
+obeys the commands the Python side sends.
 
 ### `Python_Suit_ESP32_Get_Send_Data_V1/`
 
-- **Purpose:** the program that runs *on your computer*.
-- **Contents:** several small `.py` files, each responsible for one job
-  (talking to the suit, reading the keyboard, printing to the screen, etc.),
-  plus an auto-generated `__pycache__/` folder.
-- **Interaction:** it connects to the suit's Wi-Fi, requests data, and sends
-  commands.
+**Purpose.** The program that runs *on your computer*.
 
+**Contents.** Several small `.py` files, each responsible for one job
+(talking to the suit, reading the keyboard, printing to the screen, etc.),
+plus an auto-generated `__pycache__/` folder.
+
+**Interaction.** It connects to the suit's Wi-Fi, requests data, and sends
+commands.
 
 ---
 
@@ -232,233 +234,266 @@ This is the heart of the document. For **every important file** we explain:
 
 The two programs are described separately.
 
----
-
 ### 4.A — The ESP32 firmware (C++)
-
 
 #### `Arduino_Suit_ESP32_Get_Send_Data_V1.ino` — the entry point
 
-- **Why it exists:** every Arduino program must have a starting file that
-  defines two special functions: `setup()` (runs once at power-on) and
-  `loop()` (runs over and over, forever). This file is that starting point and
-  nothing else — it delegates all real work to the modules.
-- **Responsibilities:** boot the whole system in the correct order, then keep
-  the web server responsive.
-- **Main functions:**
-  - `setup()` — starts the serial debug output, then calls, in order:
-    `initializeGPIO()`, `Wire.begin(...)` (the I²C bus), `initializeIMUs()`,
-    `initializeWiFi()`, and `initializeServer()`.
-  - `loop()` — calls `server.handleClient()` and then waits 5 milliseconds.
-    This one line is what lets the suit answer incoming requests (see
-    [Section 9](#9-runtime)).
-- **Dependencies:** it includes the headers of the modules it starts
-  (`config.h`, `globals.h`, `gpio.h`, `imu.h`, `wifi_manager.h`, `server.h`).
-- **Inputs:** none directly (it reacts to power-on).
-- **Outputs:** debug text on the serial port; indirectly, everything the
-  modules do.
+**Why it exists.** Every Arduino program must have a starting file that
+defines two special functions: `setup()` (runs once at power-on) and
+`loop()` (runs over and over, forever). This file is that starting point and
+nothing else — it delegates all real work to the modules.
 
----
+**Responsibilities.** Boot the whole system in the correct order, then keep
+the web server responsive.
+
+**Main functions.**
+
+- `setup()` — starts the serial debug output, then calls, in order:
+  `initializeGPIO()`, `Wire.begin(...)` (the I²C bus), `initializeIMUs()`,
+  `initializeWiFi()`, and `initializeServer()`.
+- `loop()` — calls `server.handleClient()` and then waits 5 milliseconds.
+  This one line is what lets the suit answer incoming requests (see
+  [Section 9](#9-runtime)).
+
+**Dependencies.** It includes the headers of the modules it starts
+(`config.h`, `globals.h`, `gpio.h`, `imu.h`, `wifi_manager.h`, `server.h`).
+
+**Inputs.** None directly (it reacts to power-on).
+
+**Outputs.** Debug text on the serial port; indirectly, everything the
+modules do.
 
 #### `config.h` — all the settings in one place
 
-- **Why it exists:** so that every adjustable number (which pin controls which
-  part, the Wi-Fi name and password, how many sensors there are) lives in a
-  *single, easy-to-find file*. Nothing here "does" anything; it only defines
-  constants.
-- **Responsibilities:** describe the physical wiring and the network to the
-  rest of the firmware.
-- **Main contents:**
-  - Pin numbers for the two I²C wires, the two piezo sensors, the three LEDs,
-    and the two vibration motors.
-  - The I²C address of the multiplexer (`TCA9548A_ADDR = 0x70`).
-  - `NUM_IMUS = 8` and `FIRST_IMU_CHANNEL = 8`.
-  - The Wi-Fi network name and password.
-- **Interaction:** almost every other firmware file includes `config.h` and
-  reads these values. All configurable parameters are listed in
-  [Section 13](#13-configuration).
+**Why it exists.** So that every adjustable number (which pin controls which
+part, the Wi-Fi name and password, how many sensors there are) lives in a
+*single, easy-to-find file*. Nothing here "does" anything; it only defines
+constants.
 
+**Responsibilities.** Describe the physical wiring and the network to the
+rest of the firmware.
 
----
+**Main contents.**
+
+- Pin numbers for the two I²C wires, the two piezo sensors, the three LEDs,
+  and the two vibration motors.
+- The I²C address of the multiplexer (`TCA9548A_ADDR = 0x70`).
+- `NUM_IMUS = 8` and `FIRST_IMU_CHANNEL = 8`.
+- The Wi-Fi network name and password.
+
+**Interaction.** Almost every other firmware file includes `config.h` and
+reads these values. All configurable parameters are listed in
+[Section 13](#13-configuration).
 
 #### `types.h` — the shape of one sensor reading
 
-- **Why it exists:** to define **one common "record" format** for the data of a
-  single sensor, so every module agrees on what a reading looks like.
-- **Responsibilities:** declare the `SensorReading` structure.
-- **Main structure — `SensorReading`:** a small bundle of values held together:
-  - `channel` — which sensor slot this reading came from;
-  - `heading`, `pitch`, `roll` — the three orientation angles (in degrees);
-  - `piezo_left`, `piezo_right` — the two piezo sensor values.
-- **Interaction:** used by `globals` (which stores an array of these), by
-  `imu.cpp` (which fills them in), and by `json.cpp` (which reads them out).
+**Why it exists.** To define **one common "record" format** for the data of a
+single sensor, so every module agrees on what a reading looks like.
+
+**Responsibilities.** Declare the `SensorReading` structure.
+
+**Main structure — `SensorReading`.** A small bundle of values held together:
+
+- `channel` — which sensor slot this reading came from;
+- `heading`, `pitch`, `roll` — the three orientation angles (in degrees);
+- `piezo_left`, `piezo_right` — the two piezo sensor values.
+
+**Interaction.** Used by `globals` (which stores an array of these), by
+`imu.cpp` (which fills them in), and by `json.cpp` (which reads them out).
 
 > A *structure* (`struct`) is just a way to keep related values together under
 > one name, instead of juggling six loose variables. You can picture it as one
 > row of a table.
 
----
-
 #### `globals.h` / `globals.cpp` — the shared memory of the firmware
 
-- **Why they exist:** several modules need to share the *same* objects and
-  data (the web server, the eight sensors, the latest readings). Rather than
-  passing these around everywhere, they are declared once as **global**
-  (program-wide) variables that any module can reach.
-- **Responsibilities:** create and hold the long-lived objects and data.
-- **Main contents (defined in `globals.cpp`, announced in `globals.h`):**
-  - `server` — the web-server object, listening on port 80.
-  - `imuSensors[8]` — an array of eight BNO055 sensor objects.
-  - `allReadings[8]` — an array of eight `SensorReading` records: the most
-    recent measurement from each sensor.
-  - `actionTriggered` — a single true/false flag, initialised to `false`.
-- **Inputs/Outputs:** this is shared state, so it is *written* by some modules
-  and *read* by others (see [Section 5](#5-communication-between-files)).
+**Why they exist.** Several modules need to share the *same* objects and
+data (the web server, the eight sensors, the latest readings). Rather than
+passing these around everywhere, they are declared once as **global**
+(program-wide) variables that any module can reach.
 
+**Responsibilities.** Create and hold the long-lived objects and data.
 
----
+**Main contents (defined in `globals.cpp`, announced in `globals.h`).**
+
+- `server` — the web-server object, listening on port 80.
+- `imuSensors[8]` — an array of eight BNO055 sensor objects.
+- `allReadings[8]` — an array of eight `SensorReading` records: the most
+  recent measurement from each sensor.
+- `actionTriggered` — a single true/false flag, initialised to `false`.
+
+**Inputs/Outputs.** This is shared state, so it is *written* by some modules
+and *read* by others (see [Section 5](#5-communication-between-files)).
 
 #### `gpio.h` / `gpio.cpp` — preparing the simple electrical pins
 
-- **Why they exist:** the LEDs, motors and piezo sensors are wired to plain
-  pins of the ESP32. Before use, each pin must be told whether it is an
-  **output** (the ESP32 drives it) or an **input** (the ESP32 reads it).
-  *"GPIO"* stands for **General-Purpose Input/Output** — the ordinary pins.
-- **Responsibilities:** set the direction of every simple pin and make sure all
-  outputs start in the "off" state.
-- **Main function:**
-  - `initializeGPIO()` — sets the three LED pins and the two motor pins as
-    outputs (and writes them LOW = off), and sets the two piezo pins as inputs.
-- **Inputs:** none. **Outputs:** the electrical configuration of the pins.
-- **Interaction:** called once by `setup()`. After this runs, `handlers.cpp`
-  can safely switch LEDs and motors on and off.
+**Why they exist.** The LEDs, motors and piezo sensors are wired to plain
+pins of the ESP32. Before use, each pin must be told whether it is an
+**output** (the ESP32 drives it) or an **input** (the ESP32 reads it).
+*"GPIO"* stands for **General-Purpose Input/Output** — the ordinary pins.
 
----
+**Responsibilities.** Set the direction of every simple pin and make sure all
+outputs start in the "off" state.
+
+**Main function.**
+
+- `initializeGPIO()` — sets the three LED pins and the two motor pins as
+  outputs (and writes them LOW = off), and sets the two piezo pins as inputs.
+
+**Inputs.** None.
+
+**Outputs.** The electrical configuration of the pins.
+
+**Interaction.** Called once by `setup()`. After this runs, `handlers.cpp`
+can safely switch LEDs and motors on and off.
 
 #### `mux.h` / `mux.cpp` — choosing which sensor is "on the line"
 
-- **Why they exist:** all eight BNO055 sensors share the **same I²C address**,
-  which normally means they cannot all be on the same two wires (they would all
-  answer at once and collide). The **TCA9548A multiplexer** solves this: it is a
-  switch that connects only **one** sensor to the wires at a time. This module
-  operates that switch.
-- **Responsibilities:** select a single multiplexer channel.
-- **Main function:**
-  - `selectMuxChannel(channel)` — tells the multiplexer which channel to
-    connect.
-- **Inputs:** a channel number. **Outputs:** an I²C command to the multiplexer.
-- **Interaction:** called by `imu.cpp` before every sensor access, so that the
-  correct sensor is connected first.
+**Why they exist.** All eight BNO055 sensors share the **same I²C address**,
+which normally means they cannot all be on the same two wires (they would all
+answer at once and collide). The **TCA9548A multiplexer** solves this: it is a
+switch that connects only **one** sensor to the wires at a time. This module
+operates that switch.
 
+**Responsibilities.** Select a single multiplexer channel.
 
----
+**Main function.**
+
+- `selectMuxChannel(channel)` — tells the multiplexer which channel to
+  connect.
+
+**Inputs.** A channel number.
+
+**Outputs.** An I²C command to the multiplexer.
+
+**Interaction.** Called by `imu.cpp` before every sensor access, so that the
+correct sensor is connected first.
 
 #### `imu.h` / `imu.cpp` — talking to the orientation sensors
 
-- **Why they exist:** this is the module that actually **reads the body
-  orientation**. It is the single most important sensor module.
-- **Responsibilities:** wake up all eight IMUs at start-up, and, on demand,
-  read the current angles from all of them plus the two piezo values.
-- **Main functions:**
-  - `initializeIMUs()` — loops over the eight sensor slots; for each one it
-    selects the multiplexer channel, waits briefly, and calls the sensor's
-    `begin()` to start it. On success it enables the sensor's *external
-    crystal* (a small hardware detail that improves timing accuracy) and prints
-    "OK"; on failure it prints "FAILED" but keeps going.
-  - `readIMUData(index, heading, pitch, roll)` — asks one sensor for its
-    current Euler angles and copies the three numbers back to the caller.
-  - `captureIMUData()` — the "read everything now" function. For each of the
-    eight slots it selects the channel, waits 3 ms, and reads the angles into
-    `allReadings[]`. Afterwards it reads the two piezo pins **once** and copies
-    those two values into **all** eight readings.
-- **Inputs:** the physical sensors (via I²C) and the piezo pins (analog).
-- **Outputs:** it fills the shared `allReadings[]` array in `globals`.
-- **Interaction:** it relies on `mux.cpp` to switch channels and on `globals`
-  to store results. It is triggered by `handlers.cpp` whenever the computer
-  asks for data.
+**Why they exist.** This is the module that actually **reads the body
+orientation**. It is the single most important sensor module.
 
----
+**Responsibilities.** Wake up all eight IMUs at start-up, and, on demand,
+read the current angles from all of them plus the two piezo values.
+
+**Main functions.**
+
+- `initializeIMUs()` — loops over the eight sensor slots; for each one it
+  selects the multiplexer channel, waits briefly, and calls the sensor's
+  `begin()` to start it. On success it enables the sensor's *external
+  crystal* (a small hardware detail that improves timing accuracy) and prints
+  "OK"; on failure it prints "FAILED" but keeps going.
+- `readIMUData(index, heading, pitch, roll)` — asks one sensor for its
+  current Euler angles and copies the three numbers back to the caller.
+- `captureIMUData()` — the "read everything now" function. For each of the
+  eight slots it selects the channel, waits 3 ms, and reads the angles into
+  `allReadings[]`. Afterwards it reads the two piezo pins **once** and copies
+  those two values into **all** eight readings.
+
+**Inputs.** The physical sensors (via I²C) and the piezo pins (analog).
+
+**Outputs.** It fills the shared `allReadings[]` array in `globals`.
+
+**Interaction.** It relies on `mux.cpp` to switch channels and on `globals`
+to store results. It is triggered by `handlers.cpp` whenever the computer
+asks for data.
 
 #### `json.h` / `json.cpp` — turning readings into a text message
 
-- **Why they exist:** the readings live inside the ESP32 as raw numbers, but
-  they must be **sent as text** the computer can understand. This module packs
-  them into **JSON**, a simple text format (explained in
-  [Section 10](#10-communication-protocols)).
-- **Responsibilities:** build one JSON string that contains everything the
-  computer needs.
-- **Main function:**
-  - `buildJson()` — assembles a text message containing a `timestamp`, a list
-    (`imu_data`) with one entry per sensor (channel, heading, pitch, roll, and
-    the two piezo values), and the `action_flag`. It builds the text *by hand*,
-    piece by piece, rather than using a JSON library.
-- **Inputs:** the shared `allReadings[]` array and the `actionTriggered` flag.
-- **Outputs:** a single JSON string.
-- **Interaction:** called by `handlers.cpp` to produce the body of the `/data`
-  reply.
+**Why they exist.** The readings live inside the ESP32 as raw numbers, but
+they must be **sent as text** the computer can understand. This module packs
+them into **JSON**, a simple text format (explained in
+[Section 10](#10-communication-protocols)).
 
----
+**Responsibilities.** Build one JSON string that contains everything the
+computer needs.
+
+**Main function.**
+
+- `buildJson()` — assembles a text message containing a `timestamp`, a list
+  (`imu_data`) with one entry per sensor (channel, heading, pitch, roll, and
+  the two piezo values), and the `action_flag`. It builds the text *by hand*,
+  piece by piece, rather than using a JSON library.
+
+**Inputs.** The shared `allReadings[]` array and the `actionTriggered` flag.
+
+**Outputs.** A single JSON string.
+
+**Interaction.** Called by `handlers.cpp` to produce the body of the `/data`
+reply.
 
 #### `handlers.h` / `handlers.cpp` — answering the computer's requests
 
-- **Why they exist:** the web server must know *what to do* when a specific
-  request arrives. Each "handler" is the function that runs for one type of
-  request. This module contains those functions.
-- **Responsibilities:** react to the three kinds of request the suit accepts.
-- **Main functions:**
-  - `handleDataRequest()` — runs when the computer asks for `/data`. It calls
-    `captureIMUData()` to refresh all readings, then `buildJson()`, then sends
-    the JSON back with an HTTP "200 OK" reply.
-  - `handleLedRequest()` — runs for `/led`. It looks for the request options
-    `green`, `orange`, `red`; for each one present, a value of `1` switches
-    that LED on and anything else switches it off. It replies "OK".
-  - `handleVibrationRequest()` — runs for `/vibration`. Same idea, for the
-    `left` and `right` motors.
-- **Inputs:** the request options sent by the computer.
-- **Outputs:** JSON or an "OK" text reply; and, as a side effect, changes to
-  the LEDs and motors.
-- **Interaction:** these functions are *registered* with the server by
-  `server.cpp`. They use `imu.cpp` and `json.cpp` (for data) and the pin
-  settings from `config.h`.
+**Why they exist.** The web server must know *what to do* when a specific
+request arrives. Each "handler" is the function that runs for one type of
+request. This module contains those functions.
 
----
+**Responsibilities.** React to the three kinds of request the suit accepts.
+
+**Main functions.**
+
+- `handleDataRequest()` — runs when the computer asks for `/data`. It calls
+  `captureIMUData()` to refresh all readings, then `buildJson()`, then sends
+  the JSON back with an HTTP "200 OK" reply.
+- `handleLedRequest()` — runs for `/led`. It looks for the request options
+  `green`, `orange`, `red`; for each one present, a value of `1` switches
+  that LED on and anything else switches it off. It replies "OK".
+- `handleVibrationRequest()` — runs for `/vibration`. Same idea, for the
+  `left` and `right` motors.
+
+**Inputs.** The request options sent by the computer.
+
+**Outputs.** JSON or an "OK" text reply; and, as a side effect, changes to
+the LEDs and motors.
+
+**Interaction.** These functions are *registered* with the server by
+`server.cpp`. They use `imu.cpp` and `json.cpp` (for data) and the pin
+settings from `config.h`.
 
 #### `server.h` / `server.cpp` — the little web server
 
-- **Why they exist:** something has to *listen* for incoming requests and route
-  each one to the right handler. That is the web server's job.
-- **Responsibilities:** connect each web address to its handler and start
-  listening.
-- **Main function:**
-  - `initializeServer()` — attaches `/data` to `handleDataRequest`, `/led` to
-    `handleLedRequest`, and `/vibration` to `handleVibrationRequest`, then calls
-    `server.begin()` to start accepting connections on port 80.
-- **Inputs/Outputs:** none of its own; it wires requests to handlers.
-- **Interaction:** uses the global `server` object and the functions in
-  `handlers.cpp`. After this runs, the `loop()` in the main sketch keeps the
-  server alive.
+**Why they exist.** Something has to *listen* for incoming requests and route
+each one to the right handler. That is the web server's job.
 
----
+**Responsibilities.** Connect each web address to its handler and start
+listening.
+
+**Main function.**
+
+- `initializeServer()` — attaches `/data` to `handleDataRequest`, `/led` to
+  `handleLedRequest`, and `/vibration` to `handleVibrationRequest`, then calls
+  `server.begin()` to start accepting connections on port 80.
+
+**Inputs/Outputs.** None of its own; it wires requests to handlers.
+
+**Interaction.** Uses the global `server` object and the functions in
+`handlers.cpp`. After this runs, the `loop()` in the main sketch keeps the
+server alive.
 
 #### `wifi_manager.h` / `wifi_manager.cpp` — creating the Wi-Fi network
 
-- **Why they exist:** for the computer to reach the suit, a Wi-Fi network must
-  exist. Instead of joining an existing router, the suit **creates its own
-  network** and acts as the access point. This is simpler and needs no external
-  equipment.
-- **Responsibilities:** start the ESP32 as a Wi-Fi Access Point.
-- **Main function:**
-  - `initializeWiFi()` — calls `WiFi.softAP(name, password)` to create the
-    network, then prints the network name and the suit's own address
-    (`192.168.4.1`, the default) to the serial console.
-- **Inputs:** the name/password from `config.h`.
-- **Outputs:** a live Wi-Fi network.
-- **Interaction:** called once by `setup()`, before the server starts.
+**Why they exist.** For the computer to reach the suit, a Wi-Fi network must
+exist. Instead of joining an existing router, the suit **creates its own
+network** and acts as the access point. This is simpler and needs no external
+equipment.
+
+**Responsibilities.** Start the ESP32 as a Wi-Fi Access Point.
+
+**Main function.**
+
+- `initializeWiFi()` — calls `WiFi.softAP(name, password)` to create the
+  network, then prints the network name and the suit's own address
+  (`192.168.4.1`, the default) to the serial console.
+
+**Inputs.** The name/password from `config.h`.
+
+**Outputs.** A live Wi-Fi network.
+
+**Interaction.** Called once by `setup()`, before the server starts.
 
 > *"SoftAP"* means "software Access Point": the ESP32 behaves like a small
 > Wi-Fi router that other devices can connect to.
-
----
 
 ### 4.B — The Python client (PC)
 
@@ -466,125 +501,145 @@ Python here is organized so that **each file has one clear job**. Unlike the
 firmware, Python does not use header files; a file simply `import`s the
 functions it needs from another file.
 
----
-
 #### `config.py` — the client's settings
 
-- **Why it exists:** to keep the few adjustable values in one place.
-- **Main contents:**
-  - `ESP32 = "http://192.168.4.1"` — the web address of the suit.
-  - `REQUEST_TIMEOUT = 5` — how many seconds to wait for a reply before giving
-    up.
-  - `UPDATE_PERIOD = 0.2` — how long to pause between data requests (0.2 s =
-    five requests per second).
-- **Interaction:** imported by `main.py` and `communication.py`.
+**Why it exists.** To keep the few adjustable values in one place.
 
----
+**Main contents.**
+
+- `ESP32 = "http://192.168.4.1"` — the web address of the suit.
+- `REQUEST_TIMEOUT = 5` — how many seconds to wait for a reply before giving
+  up.
+- `UPDATE_PERIOD = 0.2` — how long to pause between data requests (0.2 s =
+  five requests per second).
+
+**Interaction.** Imported by `main.py` and `communication.py`.
 
 #### `communication.py` — the only file that talks to the suit
 
-- **Why it exists:** to concentrate **all network traffic** in one place. Every
-  message to or from the suit passes through here, so the rest of the program
-  never deals with networking directly.
-- **Responsibilities:** send commands and fetch data over HTTP.
-- **Main functions:**
-  - `send_led(green, orange, red)` — builds a web address such as
-    `.../led?green=1&orange=0&red=0` and requests it, telling the suit which
-    LEDs to switch.
-  - `send_vibration(left, right)` — same idea for the two motors, via
-    `.../vibration?left=1&right=0`.
-  - `get_sensor_data()` — requests `.../data`, then converts the JSON reply
-    into a Python dictionary (a set of named values) and returns it.
-- **Inputs:** the desired LED/motor states, or nothing (for a data request).
-- **Outputs:** a dictionary of sensor data, or `True`/`False`/`None` to report
-  success or failure.
-- **Interaction:** used by `main.py`, `led_control.py`, and
-  `vibration_control.py`. It depends only on `config.py` and the `requests`
-  library. Every function is wrapped in error handling (see
-  [Section 12](#12-error-handling)).
+**Why it exists.** To concentrate **all network traffic** in one place. Every
+message to or from the suit passes through here, so the rest of the program
+never deals with networking directly.
 
----
+**Responsibilities.** Send commands and fetch data over HTTP.
+
+**Main functions.**
+
+- `send_led(green, orange, red)` — builds a web address such as
+  `.../led?green=1&orange=0&red=0` and requests it, telling the suit which
+  LEDs to switch.
+- `send_vibration(left, right)` — same idea for the two motors, via
+  `.../vibration?left=1&right=0`.
+- `get_sensor_data()` — requests `.../data`, then converts the JSON reply
+  into a Python dictionary (a set of named values) and returns it.
+
+**Inputs.** The desired LED/motor states, or nothing (for a data request).
+
+**Outputs.** A dictionary of sensor data, or `True`/`False`/`None` to report
+success or failure.
+
+**Interaction.** Used by `main.py`, `led_control.py`, and
+`vibration_control.py`. It depends only on `config.py` and the `requests`
+library. Every function is wrapped in error handling (see
+[Section 12](#12-error-handling)).
 
 #### `display.py` — showing the data on screen
 
-- **Why it exists:** to turn the raw dictionary of numbers into a **tidy,
-  human-readable table** in the console.
-- **Responsibilities:** format and print one screen of sensor values.
-- **Main function:**
-  - `display_sensor_data(data)` — if the data is missing it does nothing;
-    otherwise it prints a header, then one line per sensor (channel, heading,
-    pitch, roll, and the two piezo values), then the action flag.
-- **Inputs:** the dictionary produced by `get_sensor_data()`.
-- **Outputs:** printed text.
-- **Interaction:** called by `main.py` on every cycle.
+**Why it exists.** To turn the raw dictionary of numbers into a **tidy,
+human-readable table** in the console.
 
----
+**Responsibilities.** Format and print one screen of sensor values.
+
+**Main function.**
+
+- `display_sensor_data(data)` — if the data is missing it does nothing;
+  otherwise it prints a header, then one line per sensor (channel, heading,
+  pitch, roll, and the two piezo values), then the action flag.
+
+**Inputs.** The dictionary produced by `get_sensor_data()`.
+
+**Outputs.** Printed text.
+
+**Interaction.** Called by `main.py` on every cycle.
 
 #### `keyboard_control.py` — listening to the keyboard
 
-- **Why it exists:** to let the user trigger actions by pressing keys, *without
-  interrupting* the continuous data display. It uses a helper library
-  (`keyboard`) that watches the keyboard in the background.
-- **Responsibilities:** connect specific keys to specific actions, and later
-  disconnect them.
-- **Main functions:**
-  - `keyboard_listener(green, orange, red, left_vibration, right_vibration)` —
-    registers "hotkeys": `g`, `o`, `r` for the three LEDs, and the Left/Right
-    arrow keys for the two motors. Each key is linked to a function to call when
-    pressed.
-  - `stop_keyboard_listener()` — removes all those key links when the program
-    ends.
-- **Inputs:** the functions to call for each key.
-- **Outputs:** none directly; it causes those functions to run when keys are
+**Why it exists.** To let the user trigger actions by pressing keys, *without
+interrupting* the continuous data display. It uses a helper library
+(`keyboard`) that watches the keyboard in the background.
+
+**Responsibilities.** Connect specific keys to specific actions, and later
+disconnect them.
+
+**Main functions.**
+
+- `keyboard_listener(green, orange, red, left_vibration, right_vibration)` —
+  registers "hotkeys": `g`, `o`, `r` for the three LEDs, and the Left/Right
+  arrow keys for the two motors. Each key is linked to a function to call when
   pressed.
-- **Interaction:** set up by `main.py`; the functions it calls live in
-  `led_control.py` and `vibration_control.py`.
+- `stop_keyboard_listener()` — removes all those key links when the program
+  ends.
+
+**Inputs.** The functions to call for each key.
+
+**Outputs.** None directly; it causes those functions to run when keys are
+pressed.
+
+**Interaction.** Set up by `main.py`; the functions it calls live in
+`led_control.py` and `vibration_control.py`.
 
 > The library runs the key-handling in a **separate thread** — a second line of
 > execution that runs *at the same time* as the main loop. This is why you can
 > keep seeing sensor data while also reacting to key presses. Threads are
 > explained in [Section 9](#9-runtime).
 
----
-
 #### `led_control.py` — remembering and toggling LED states
 
-- **Why it exists:** a key press should **toggle** a light (press once = on,
-  press again = off). To do that, the program must *remember* whether each LED
-  is currently on. This file keeps that memory and flips it.
-- **Responsibilities:** hold the current on/off state of the three LEDs and
-  update the suit when it changes.
-- **Main functions:**
-  - `toggle_green()`, `toggle_orange()`, `toggle_red()` — each flips its own
-    remembered state, then calls `send_led(...)` with the states of **all
-    three** LEDs so the suit always receives a complete picture.
-- **Inputs:** none (triggered by key presses).
-- **Outputs:** an LED command sent through `communication.py`.
-- **Interaction:** its three functions are handed to `keyboard_control.py` as
-  the actions for keys `g`, `o`, `r`.
+**Why it exists.** A key press should **toggle** a light (press once = on,
+press again = off). To do that, the program must *remember* whether each LED
+is currently on. This file keeps that memory and flips it.
 
----
+**Responsibilities.** Hold the current on/off state of the three LEDs and
+update the suit when it changes.
+
+**Main functions.**
+
+- `toggle_green()`, `toggle_orange()`, `toggle_red()` — each flips its own
+  remembered state, then calls `send_led(...)` with the states of **all
+  three** LEDs so the suit always receives a complete picture.
+
+**Inputs.** None (triggered by key presses).
+
+**Outputs.** An LED command sent through `communication.py`.
+
+**Interaction.** Its three functions are handed to `keyboard_control.py` as
+the actions for keys `g`, `o`, `r`.
 
 #### `vibration_control.py` — remembering and toggling motor states
 
-- **Why it exists:** exactly the same pattern as `led_control.py`, but for the
-  two vibration motors.
-- **Main functions:**
-  - `toggle_left()`, `toggle_right()` — each flips its remembered state and
-    calls `send_vibration(...)` with both motor states.
-- **Interaction:** its two functions are handed to `keyboard_control.py` as the
-  actions for the Left and Right arrow keys.
+**Why it exists.** Exactly the same pattern as `led_control.py`, but for the
+two vibration motors.
 
----
+**Main functions.**
+
+- `toggle_left()`, `toggle_right()` — each flips its remembered state and
+  calls `send_vibration(...)` with both motor states.
+
+**Interaction.** Its two functions are handed to `keyboard_control.py` as the
+actions for the Left and Right arrow keys.
 
 #### `main.py` — the conductor of the Python side
 
-- **Why it exists:** to **tie everything together** and run the main loop. It is
-  the file you actually launch.
-- **Responsibilities:** start the keyboard listener, repeatedly fetch and
-  display data, and clean up on exit.
-- **What it does, in order:**
-  1. Creates a *lock* (`http_lock`) used to prevent two network requests from
+**Why it exists.** To **tie everything together** and run the main loop. It is
+the file you actually launch.
+
+**Responsibilities.** Start the keyboard listener, repeatedly fetch and
+display data, and clean up on exit.
+
+**What it does, in order.**
+
+1. Creates a *lock* (`http_lock`) used to prevent two network requests from
+
      overlapping.
   2. Calls `keyboard_listener(...)`, passing in the toggle functions.
   3. Enters an endless loop: fetch data with `get_sensor_data()`, display it,
@@ -592,11 +647,13 @@ functions it needs from another file.
   4. If you press **Ctrl-C** (or an error occurs), it stops the keyboard
      listener and switches **all LEDs and motors off**, leaving the suit in a
      clean state.
-- **Inputs:** your keystrokes and the data from the suit.
-- **Outputs:** the on-screen display and the commands sent to the suit.
-- **Interaction:** it imports from every other Python file. It is the top of the
-  dependency chain.
 
+**Inputs.** Your keystrokes and the data from the suit.
+
+**Outputs.** The on-screen display and the commands sent to the suit.
+
+**Interaction.** It imports from every other Python file. It is the top of the
+dependency chain.
 
 ---
 
@@ -757,7 +814,6 @@ switched off**, in order.
    and a final command switches every LED and motor off before the program
    exits.
 
-
 ---
 
 ## 7. Data Flow
@@ -825,7 +881,6 @@ The order matters, because later steps depend on earlier ones:
 Only after all six succeed does the suit print "System ready" and enter its
 loop.
 
-
 ### Client initialization (top of `main.py`)
 
 1. Create the `http_lock`.
@@ -851,15 +906,18 @@ void loop() {
 }
 ```
 
-- **What repeats:** checking whether a web request has arrived and, if so,
-  running its handler.
-- **How often:** roughly every 5 milliseconds (about 200 times per second) — but
-  this is only a *readiness* check. Most of the time there is nothing to do.
-- **What updates:** nothing, until a request arrives. Sensor values are refreshed
-  **only** when a `/data` request is handled. LEDs and motors change **only**
-  when a `/led` or `/vibration` request arrives.
-- **What is transmitted / received:** the suit receives HTTP requests and
-  transmits HTTP replies (JSON for `/data`, "OK" for the others).
+**What repeats.** Checking whether a web request has arrived and, if so,
+running its handler.
+
+**How often.** Roughly every 5 milliseconds (about 200 times per second) — but
+this is only a *readiness* check. Most of the time there is nothing to do.
+
+**What updates.** Nothing, until a request arrives. Sensor values are refreshed
+**only** when a `/data` request is handled. LEDs and motors change **only**
+when a `/led` or `/vibration` request arrives.
+
+**What is transmitted / received.** The suit receives HTTP requests and
+transmits HTTP replies (JSON for `/data`, "OK" for the others).
 
 > Key insight: **the suit is passive.** The *computer's* polling rate, not the
 > suit's loop, sets how often the sensors are actually read.
@@ -874,12 +932,15 @@ while True:
     time.sleep(config.UPDATE_PERIOD)   # 0.2 s
 ```
 
-- **What repeats:** request data → display it → wait.
-- **How often:** every `UPDATE_PERIOD` = 0.2 s, i.e. **5 times per second**.
-- **What updates:** the on-screen table.
-- **What is transmitted / received:** it transmits a `/data` request and
-  receives a JSON reply; separately, key presses transmit `/led` and
-  `/vibration` requests.
+**What repeats.** Request data → display it → wait.
+
+**How often.** Every `UPDATE_PERIOD` = 0.2 s, i.e. **5 times per second**.
+
+**What updates.** The on-screen table.
+
+**What is transmitted / received.** It transmits a `/data` request and
+receives a JSON reply; separately, key presses transmit `/led` and
+`/vibration` requests.
 
 ### Threads (running two things at once)
 
@@ -900,76 +961,84 @@ it is used.
 
 ### Serial (115200 baud)
 
-- **What:** a direct cable link between the ESP32 and a connected computer for
-  printing plain text.
-- **Why:** it is the developer's window into the suit — every step and error is
-  printed here. It is **not** used for the actual data transfer to the Python
-  client. "115200 baud" just means the speed of that text link.
+**What.** A direct cable link between the ESP32 and a connected computer for
+printing plain text.
+
+**Why.** It is the developer's window into the suit — every step and error is
+printed here. It is **not** used for the actual data transfer to the Python
+client. "115200 baud" just means the speed of that text link.
 
 ### I²C (Inter-Integrated Circuit)
 
-- **What:** a two-wire bus (a *data* wire `SDA` on pin 21 and a *clock* wire
-  `SCL` on pin 22) that lets the ESP32 talk to several chips.
-- **Why:** the BNO055 sensors and the TCA9548A multiplexer all speak I²C, and
-  it needs only two wires no matter how many chips you attach.
-- **The address problem it creates:** every I²C chip has an "address". All eight
-  BNO055 sensors share the **same** address, so they cannot all listen on the
-  bus at once. That is exactly why the **multiplexer** exists — see the next
-  point and [Section 11](#11-algorithms).
+**What.** A two-wire bus (a *data* wire `SDA` on pin 21 and a *clock* wire
+`SCL` on pin 22) that lets the ESP32 talk to several chips.
+
+**Why.** The BNO055 sensors and the TCA9548A multiplexer all speak I²C, and
+it needs only two wires no matter how many chips you attach.
+
+**The address problem it creates.** Every I²C chip has an "address". All eight
+BNO055 sensors share the **same** address, so they cannot all listen on the
+bus at once. That is exactly why the **multiplexer** exists — see the next
+point and [Section 11](#11-algorithms).
 
 ### The multiplexer channel selection (on top of I²C)
 
-- **What:** the TCA9548A (at I²C address `0x70`) is itself an I²C chip. Writing
-  it a single byte decides which of its eight downstream channels is connected.
-- **Why:** it lets the eight identical sensors coexist by connecting them **one
-  at a time**.
+**What.** The TCA9548A (at I²C address `0x70`) is itself an I²C chip. Writing
+it a single byte decides which of its eight downstream channels is connected.
+
+**Why.** It lets the eight identical sensors coexist by connecting them **one
+at a time**.
 
 ### Wi-Fi (SoftAP)
 
-- **What:** the ESP32 creates its own wireless network named `ESP32_Test`
-  (password `12345678`) and gives itself the address `192.168.4.1`.
-- **Why:** the computer needs a way to reach the suit wirelessly, and making the
-  suit its own access point avoids depending on any external router.
+**What.** The ESP32 creates its own wireless network named `ESP32_Test`
+(password `12345678`) and gives itself the address `192.168.4.1`.
+
+**Why.** The computer needs a way to reach the suit wirelessly, and making the
+suit its own access point avoids depending on any external router.
 
 ### HTTP (HyperText Transfer Protocol)
 
-- **What:** the same request/reply language web browsers use. The computer sends
-  a short request naming a path (`/data`, `/led`, `/vibration`) and optional
-  options; the suit sends back a reply with a status code (`200` = success) and
-  some content.
-- **Why:** it is simple, well understood, and already built into both the ESP32
-  library and Python's `requests` library. The suit behaves like a tiny website;
-  the client behaves like a browser.
-- **How options are passed:** after a `?`, as `name=value` pairs joined by `&`,
-  for example `/led?green=1&orange=0&red=0`. A `1` means "on".
+**What.** The same request/reply language web browsers use. The computer sends
+a short request naming a path (`/data`, `/led`, `/vibration`) and optional
+options; the suit sends back a reply with a status code (`200` = success) and
+some content.
+
+**Why.** It is simple, well understood, and already built into both the ESP32
+library and Python's `requests` library. The suit behaves like a tiny website;
+the client behaves like a browser.
+
+**How options are passed.** After a `?`, as `name=value` pairs joined by `&`,
+for example `/led?green=1&orange=0&red=0`. A `1` means "on".
 
 ### JSON (JavaScript Object Notation)
 
-- **What:** a lightweight **text** format for structured data, using `{ }` for
-  named groups and `[ ]` for lists. Example (shortened):
+**What.** A lightweight **text** format for structured data, using `{ }` for
+named groups and `[ ]` for lists. Example (shortened):
 
-  ```json
-  {
-    "timestamp": 1305435,
-    "imu_data": [
-      { "channel": 0, "heading": 359.90, "pitch": 4.60, "roll": 48.60,
-        "piezo_left": 0, "piezo_right": 0 }
-    ],
-    "action_flag": false
-  }
-  ```
+```json
+{
+  "timestamp": 1305435,
+  "imu_data": [
+    { "channel": 0, "heading": 359.90, "pitch": 4.60, "roll": 48.60,
+      "piezo_left": 0, "piezo_right": 0 }
+  ],
+  "action_flag": false
+}
+```
 
-- **Why:** it is readable by humans *and* easy for the computer to turn back
-  into structured values. Both sides already understand it, so it is a natural
-  choice for the sensor reply.
+**Why.** It is readable by humans *and* easy for the computer to turn back
+into structured values. Both sides already understand it, so it is a natural
+choice for the sensor reply.
 
 ### Analog reading (ADC) — for the piezo sensors
 
-- **What:** not a "conversation" protocol, but a signal path. The piezo sensors
-  produce a *voltage*; the ESP32's **Analog-to-Digital Converter** turns that
-  voltage into a number (`analogRead`).
-- **Why:** a piezo output is a smoothly varying voltage, not a digital on/off,
-  so it must be measured as a number rather than simply read as high/low.
+**What.** Not a "conversation" protocol, but a signal path. The piezo sensors
+produce a *voltage*; the ESP32's **Analog-to-Digital Converter** turns that
+voltage into a number (`analogRead`).
+
+**Why.** A piezo output is a smoothly varying voltage, not a digital on/off,
+so it must be measured as a number rather than simply read as high/low.
 
 ---
 
@@ -992,7 +1061,6 @@ The important point: **this project does not compute orientation itself.** It
 simply asks the sensor for the finished angles (`getVector(VECTOR_EULER)`). That
 is why the firmware has no heavy mathematics.
 
-
 ### 2. Sharing eight identical sensors with a multiplexer
 
 Because all eight BNO055 sensors answer to the same I²C address, the firmware
@@ -1006,7 +1074,6 @@ Because all eight BNO055 sensors answer to the same I²C address, the firmware
 The selection is done with a **bit pattern**: the multiplexer connects channel
 *k* when bit *k* of the byte it receives is set to 1. The code produces that
 byte with `1 << channel` (a `1` shifted left `channel` times).
-
 
 ### 3. Building JSON by hand
 
@@ -1047,9 +1114,10 @@ rather than stop.
 - During reading, `readIMUData()` **always reports success**, even for a sensor
   that did not really answer. So a missing sensor does not raise an error; it
   simply produces stale or meaningless angles in its slot.
-- **Consequence:** the computer always receives eight entries. It cannot tell
-  from V1's data whether a given sensor is healthy. (Later versions add
-  "detected/calibrated" flags to fix this.)
+
+**Consequence.** The computer always receives eight entries. It cannot tell
+from V1's data whether a given sensor is healthy. (Later versions add
+"detected/calibrated" flags to fix this.)
 
 ### Communication failures (computer side)
 
@@ -1105,7 +1173,7 @@ Everything you might reasonably want to change lives in just two files:
 **Pin assignments** (which ESP32 pin connects to which part):
 
 | Constant | Pin | Connected to | Direction |
-|----------|-----|--------------|-----------|
+|---|---|---|---|
 | `SDA_PIN` | 21 | I²C data wire | bidirectional |
 | `SCL_PIN` | 22 | I²C clock wire | output |
 | `PIEZO_LEFT_PIN` | 34 | Left piezo sensor | input (analog) |
@@ -1119,7 +1187,7 @@ Everything you might reasonably want to change lives in just two files:
 **I²C / sensor settings:**
 
 | Constant | Value | Meaning |
-|----------|-------|---------|
+|---|---|---|
 | `TCA9548A_ADDR` | `0x70` | I²C address of the multiplexer |
 | `NUM_IMUS` | `8` | How many IMU slots the firmware handles |
 | `FIRST_IMU_CHANNEL` | `8` | **Defined but never used** (see note below) |
@@ -1127,7 +1195,7 @@ Everything you might reasonably want to change lives in just two files:
 **Wi-Fi settings:**
 
 | Constant | Value | Meaning |
-|----------|-------|---------|
+|---|---|---|
 | `WIFI_SSID` | `"ESP32_Test"` | Name of the network the suit creates |
 | `WIFI_PASSWORD` | `"12345678"` | Password for that network |
 
@@ -1135,11 +1203,10 @@ Everything you might reasonably want to change lives in just two files:
 the code: a `10 ms` pause per sensor at start-up (`imu.cpp`), a `3 ms` pause per
 sensor per read (`imu.cpp`), and the `5 ms` loop delay (main sketch).
 
-
 ### Computer configuration — `Python_Suit_ESP32_Get_Send_Data_V1/config.py`
 
 | Constant | Value | Meaning |
-|----------|-------|---------|
+|---|---|---|
 | `ESP32` | `"http://192.168.4.1"` | The suit's web address. Must match the SoftAP address. |
 | `REQUEST_TIMEOUT` | `5` | Seconds to wait for any reply before giving up. |
 | `UPDATE_PERIOD` | `0.2` | Seconds between data requests (0.2 s = 5 per second). |
@@ -1147,7 +1214,7 @@ sensor per read (`imu.cpp`), and the `5 ms` loop delay (main sketch).
 ### Key mappings (in `main.py` + `keyboard_control.py`)
 
 | Key | Action |
-|-----|--------|
+|---|---|
 | `G` | Toggle the green LED |
 | `O` | Toggle the orange LED |
 | `R` | Toggle the red LED |
@@ -1158,7 +1225,7 @@ sensor per read (`imu.cpp`), and the `5 ms` loop delay (main sketch).
 ### HTTP endpoints (the suit's "API")
 
 | Request | Purpose | Options | Reply |
-|---------|---------|---------|-------|
+|---|---|---|---|
 | `GET /data` | Read all sensors | none | JSON (see [Section 10](#10-communication-protocols)) |
 | `GET /led` | Set the LEDs | `green`, `orange`, `red` (`1`=on) | `OK` |
 | `GET /vibration` | Set the motors | `left`, `right` (`1`=on) | `OK` |
@@ -1213,5 +1280,3 @@ flowchart LR
     end
     S3 <-->|"Wi-Fi + HTTP + JSON"| P2
 ```
-
----

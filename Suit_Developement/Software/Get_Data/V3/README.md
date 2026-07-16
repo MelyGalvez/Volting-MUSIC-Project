@@ -3,27 +3,27 @@
 
 ---
 
-## Table of contents
+## Table of Contents
 
-1. [Project overview](#1-project-overview)
-2. [Vocabulary](#2-vocabulary-read-this-first)
-3. [Global workflow](#3-global-workflow)
-4. [Folder structure](#4-folder-structure)
-5. [File by file](#5-file-by-file)
-6. [Communication between files](#6-communication-between-files)
-7. [Execution flow](#7-execution-flow)
-8. [Data flow](#8-data-flow)
+1. [Project Overview](#1-project-overview)
+2. [Vocabulary (Read This First)](#2-vocabulary-read-this-first)
+3. [Global Workflow](#3-global-workflow)
+4. [Folder Structure](#4-folder-structure)
+5. [File Explanation](#5-file-explanation)
+6. [Communication Between Files](#6-communication-between-files)
+7. [Execution Flow](#7-execution-flow)
+8. [Data Flow](#8-data-flow)
 9. [Initialization](#9-initialization)
 10. [Runtime](#10-runtime)
-11. [Communication protocols and the HTTP API](#11-communication-protocols-and-the-http-api)
+11. [Communication Protocols and the HTTP API](#11-communication-protocols-and-the-http-api)
 12. [Algorithms](#12-algorithms)
-13. [Error handling](#13-error-handling)
+13. [Error Handling](#13-error-handling)
 14. [Configuration](#14-configuration)
-15. [Architecture summary](#15-architecture-summary)
+15. [Architecture Summary](#15-architecture-summary)
 
 ---
 
-## 1. Project overview
+## 1. Project Overview
 
 ### What the project is
 
@@ -42,7 +42,7 @@ numbers.
 So this repository draws a hard line:
 
 | Inside this repository | Deliberately outside it |
-| --- | --- |
+|---|---|
 | Reading the sensors | Drawing a skeleton |
 | Removing a reference pose | Recognising gestures |
 | Formatting the result as JSON | Generating music or visuals |
@@ -56,7 +56,7 @@ this folder, and the API is described below without reference to any particular 
 Everything below is taken from `config.h` and `global.cpp`.
 
 | Part | Role | How the code reaches it |
-| --- | --- | --- |
+|---|---|---|
 | ESP32 board | Runs the firmware, hosts the Wi-Fi network and the web server | — |
 | 8 × BNO055 | Orientation sensors ("IMUs"), one per body part | I²C, via the multiplexer |
 | 1 × TCA9548A | I²C multiplexer at address `0x70`; lets eight identical sensors share one bus | I²C, GPIO 21/22 |
@@ -111,7 +111,7 @@ flowchart LR
 
 ---
 
-## 2. Vocabulary (read this first)
+## 2. Vocabulary (Read This First)
 
 Short definitions of every term used later. Skip if you already know them.
 
@@ -166,7 +166,7 @@ sensors' readings in a known pose, then subtract that reference from everything 
 
 ---
 
-## 3. Global workflow
+## 3. Global Workflow
 
 The complete life of the system, from power-on onwards:
 
@@ -197,25 +197,23 @@ flowchart TD
 
 The single most important thing on that diagram: **acquisition hangs off the request, not
 off the loop.** Nothing is sampled unless somebody asks for `/data`. See
-[Runtime](#10-runtime).
+[Section 10](#10-runtime).
 
 ---
 
-## 4. Folder structure
+## 4. Folder Structure
 
 The tree is deliberately flat — there are only two levels.
 
 ```
 V3/
-├── README.md                          ← this document
-└── Arduino_Suit_ESP32_Get_Data_V3/    ← the sketch; this is what gets compiled
-
+├── Arduino_Suit_ESP32_Get_Data_V3/    ← the sketch; this is what gets compiled
+└── README.md                          ← this document
 ```
-
 
 ---
 
-## 5. File by file
+## 5. File Explanation
 
 Presented bottom-up: the files that touch hardware first, then the ones built on top of
 them. This is also a reasonable order in which to read the source.
@@ -228,7 +226,7 @@ constants (values fixed at compile time, costing no memory at runtime).
 
 **Contents.** Pin numbers, the multiplexer's I²C address, the number of IMUs, two timing
 values, and the Wi-Fi credentials. Every constant is explained in
-[Configuration](#14-configuration).
+[Section 14](#14-configuration).
 
 **Consumed by.** Nearly every other file.
 
@@ -246,12 +244,12 @@ means the same thing everywhere.
 - `SystemState` — `SYSTEM_BOOT`, `SYSTEM_CALIBRATION`, `SYSTEM_READY`, `SYSTEM_ERROR`.
 - `EulerAngles`, `CalibrationOffset` — three floats each (heading, pitch, roll), zeroed.
 - `Quaternion` — `w, x, y, z`, defaulting to `w=1, x=y=z=0` (the "no rotation" value; this
-  default matters, see [Algorithms](#12-algorithms)).
+  default matters, see [Section 12](#12-algorithms)).
 - `IMUStatus` — `detected`, `calibrated`, both false initially.
 - `SensorReading` — everything known about one body part: its `BodyPart`, its `Quaternion`,
   its `EulerAngles`, and two piezo integers.
 
-### `global.cpp` / `global.h` — the shared state
+### `global.h` / `global.cpp` — the shared state
 
 **Why it exists.** In a program with no operating system and one thread, the pragmatic way
 to share data between modules is a small set of global variables, declared once and visible
@@ -261,7 +259,7 @@ rather than scattered.
 **Owns:**
 
 | Variable | What it holds |
-| --- | --- |
+|---|---|
 | `server` | The `WebServer` instance, **bound to port 80** |
 | `imuSensors[8]` | The eight `Adafruit_BNO055` driver objects, constructed with IDs `0`–`7` |
 | `allReadings[8]` | The latest processed reading per body part; initialised with the body parts **in enum order**, which fixes the order of the JSON array |
@@ -270,7 +268,7 @@ rather than scattered.
 | `imuStatus[8]` | Per-sensor `detected` / `calibrated` flags |
 | `systemState` | The current state, starting at `SYSTEM_BOOT` |
 
-### `gpio.cpp` / `gpio.h` — the thinnest possible hardware layer
+### `gpio.h` / `gpio.cpp` — the thinnest possible hardware layer
 
 **Why it exists.** So no other file ever writes a raw pin number. Everywhere else says
 `setGreenLED(true)`, not `digitalWrite(18, 1)` — the pin lives only in `config.h`.
@@ -279,10 +277,10 @@ rather than scattered.
 input); `setRedLED` / `setYellowLED` / `setGreenLED`; `readLeftPiezo()` /
 `readRightPiezo()`, which return raw `analogRead()` values.
 
-### `mux.cpp` / `mux.h` — one function, and the whole project depends on it
+### `mux.h` / `mux.cpp` — one function, and the whole project depends on it
 
 **Why it exists.** It is the answer to "eight sensors, one address" described in
-[Vocabulary](#2-vocabulary-read-this-first).
+[Section 2](#2-vocabulary-read-this-first).
 
 **How it works.** `selectMuxChannel(channel)` refuses anything `>= NUM_IMUS`, then sends a
 single byte to the TCA9548A at `0x70`: `1 << channel`. The byte is a bit mask, one bit per
@@ -321,9 +319,9 @@ of multiplications each — cheaper to inline than to call.
 **Provides.** `quatConjugate()` (negate x, y, z — for a rotation this is the inverse),
 `quatMultiply()` (the Hamilton product — composes two rotations), and `quatDelta(current,
 reference)`, which returns `current ⊗ conjugate(reference)`. The intuition is in
-[Algorithms](#12-algorithms).
+[Section 12](#12-algorithms).
 
-### `imu.cpp` / `imu.h` — where sensor data enters the system
+### `imu.h` / `imu.cpp` — where sensor data enters the system
 
 **Why it exists.** This is the only file allowed to touch a BNO055. It owns the
 channel-switching discipline the multiplexer demands.
@@ -351,9 +349,9 @@ both piezo pins and copies that same pair of values into **all eight** entries.
 **`allIMUsDetected()`** is declared and defined here — and is called from nowhere in the
 project. It is dead code today.
 
-### `calibration.cpp` / `calibration.h` — teaching the suit what "neutral" means
+### `calibration.h` / `calibration.cpp` — teaching the suit what "neutral" means
 
-**Why it exists.** See *Calibration* in [Vocabulary](#2-vocabulary-read-this-first).
+**Why it exists.** See *Calibration* in [Section 2](#2-vocabulary-read-this-first).
 
 **How it works.** `calibrateIMUs()` prints `Keep the T-pose...`, sets state
 `SYSTEM_CALIBRATION`, then `delay(CALIBRATION_TIME_MS)` — **ten seconds during which the
@@ -366,7 +364,7 @@ reading per sensor, stores the Euler triple in `imuOffsets[i]`, the quaternion i
 the wait, not an average over it. A twitch at second 10 lands in the reference; a twitch at
 second 3 does not.
 
-### `status.cpp` / `status.h` — the state machine and its three LEDs
+### `status.h` / `status.cpp` — the state machine and its three LEDs
 
 **Why it exists.** The suit has no screen, and the person wearing it cannot see a serial
 console. Three LEDs are the entire user interface.
@@ -375,7 +373,7 @@ console. Three LEDs are the entire user interface.
 `refreshStatus()`, which drives the LEDs from a straight `switch`:
 
 | State | Red | Yellow | Green | Meaning |
-| --- | :---: | :---: | :---: | --- |
+|---|:---:|:---:|:---:|---|
 | `SYSTEM_BOOT` | ○ | ● | ○ | Starting up |
 | `SYSTEM_CALIBRATION` | ○ | ● | ○ | Hold the T-pose |
 | `SYSTEM_READY` | ○ | ○ | ● | Serving data |
@@ -391,7 +389,7 @@ never called. So the yellow LED is **solid**, not blinking, for the whole calibr
 the blink branch never executes as the code stands. The LED table above is what you will
 observe.
 
-### `wifi_manager.cpp` / `wifi_manager.h` — creating the network
+### `wifi_manager.h` / `wifi_manager.cpp` — creating the network
 
 **Why it exists.** To make the suit self-sufficient. It does not join a network; it *is*
 the network, so the system works with no router, no infrastructure, and no venue Wi-Fi.
@@ -404,7 +402,7 @@ target.
 **Note it can only ever set `SYSTEM_ERROR`, never clear it.** A run whose sensors failed
 stays in error even if the network comes up perfectly.
 
-### `server.cpp` / `server.h` — the routing table
+### `server.h` / `server.cpp` — the routing table
 
 **Why it exists.** To map URL paths to functions, and to keep that map in one glanceable
 place.
@@ -418,7 +416,7 @@ registered, and no custom not-found handler is installed.
 without touching a single sensor — so it stays fast, and a failure to reach it is
 unambiguously a network problem.
 
-### `handlers.cpp` / `handlers.h` — the request, end to end
+### `handlers.h` / `handlers.cpp` — the request, end to end
 
 **Why it exists.** It is the seam between the network world and the sensor world, and it is
 deliberately tiny. `handleDataRequest()` is three steps: `captureIMUs()`, `buildJson()`,
@@ -426,9 +424,9 @@ deliberately tiny. `handleDataRequest()` is three steps: `captureIMUs()`, `build
 
 **Why this file is where the architecture is decided.** Because acquisition is called
 *here* — inside a request — rather than in `loop()`, the client's polling rate *is* the
-sampling rate. See [Runtime](#10-runtime).
+sampling rate. See [Section 10](#10-runtime).
 
-### `json.cpp` / `json.h` — the public face of the system
+### `json.h` / `json.cpp` — the public face of the system
 
 **Why it exists.** Everything above this point is C++ structs that only this firmware
 understands. `buildJson()` turns them into text that every language on earth can parse. It
@@ -458,7 +456,7 @@ starts**.
 
 ---
 
-## 6. Communication between files
+## 6. Communication Between Files
 
 The modules form a layered tree. An arrow means "includes and calls".
 
@@ -531,7 +529,7 @@ Note who talks to whom. `json` never touches a sensor. `imu` never knows HTTP ex
 
 ---
 
-## 7. Execution flow
+## 7. Execution Flow
 
 ### Power-on to ready
 
@@ -599,11 +597,11 @@ stateDiagram-v2
 
 That note is a genuine property of the code, not a simplification: nothing reachable from
 `loop()` calls `setSystemState()`. The consequences are covered in
-[Error handling](#13-error-handling).
+[Section 13](#13-error-handling).
 
 ---
 
-## 8. Data flow
+## 8. Data Flow
 
 Following one number from a body part to an application:
 
@@ -632,7 +630,7 @@ flowchart TD
 ### The transformations that matter
 
 | Step | Input | Output | Where |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | Fusion | Raw accel/gyro/mag | Absolute orientation | Inside the BNO055 |
 | Axis remap | Raw Euler | Remapped Euler (identity today) | `orientation.cpp` |
 | Euler zeroing | Absolute Euler | Angle relative to T-pose | `imu.cpp`, subtraction |
@@ -665,7 +663,7 @@ crystal. **All eight must answer or the system enters `SYSTEM_ERROR`.**
 
 **6 — Calibration.** Skipped entirely if the state is `SYSTEM_ERROR`. Otherwise: ten
 blocking seconds, then one reference sample per sensor. Details in
-[Algorithms](#12-algorithms).
+[Section 12](#12-algorithms).
 
 **7 — Network.** The access point is created from the credentials in `config.h`. Its IP is
 printed to serial. Runs whether or not the sensors are healthy.
@@ -719,12 +717,12 @@ rather than a device you drive.
 
 ---
 
-## 11. Communication protocols and the HTTP API
+## 11. Communication Protocols and the HTTP API
 
 ### The protocol stack
 
 | Protocol | Why it is used | Who exchanges what | Where |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | **I²C** | Lets many chips share two wires; what the BNO055 and TCA9548A speak | ESP32 ↔ multiplexer (channel byte), ESP32 ↔ sensors (orientation) | `mux.cpp`, `imu.cpp` |
 | **Analog** | Piezos output a voltage, not data | Piezo → ESP32, one integer each | `gpio.cpp` |
 | **Wi-Fi (Access Point)** | Self-contained; needs no router | ESP32 hosts, clients join | `wifi_manager.cpp` |
@@ -739,7 +737,7 @@ language, a platform or a library on the consumer.
 
 1. Power the ESP32.
 2. Join the Wi-Fi network it creates — SSID and password are in `config.h` (see
-   [Configuration](#14-configuration)).
+   [Section 14](#14-configuration)).
 3. Read the ESP32's IP from the serial output at boot (`IP Address : ...`). With the
    default ESP32 access-point settings this is `192.168.4.1`, but the printed value is
    authoritative.
@@ -805,7 +803,7 @@ eight entries shown (the other six follow the same shape):
 #### Top-level fields
 
 | Field | Type | Meaning |
-| --- | --- | --- |
+|---|---|---|
 | `timestamp` | integer | `millis()` — milliseconds since the ESP32 booted. **Not** a wall clock: it has no date, it resets on every power cycle, and it wraps to 0 after ~49.7 days. Use it for ordering and for measuring intervals, not for absolute time. |
 | `system` | string | `"boot"`, `"calibration"`, `"ready"` or `"error"`. In practice a client only ever sees `"ready"` or `"error"`, since the server does not accept requests before `setup()` finishes. |
 | `imu_data` | array | Always exactly 8 entries, **always in this order**: `back_upper`, `back_lower`, `left_arm`, `right_arm`, `left_forearm`, `right_forearm`, `left_hand`, `right_hand`. The order is fixed by `allReadings` in `global.cpp` and never varies — you may index it positionally, though `body` is there if you would rather not. |
@@ -813,7 +811,7 @@ eight entries shown (the other six follow the same shape):
 #### The `imu_data` entries
 
 | Field | Type | Meaning |
-| --- | --- | --- |
+|---|---|---|
 | `body` | string | Which body part this entry describes. |
 | `detected` | bool | Did this sensor answer **at boot**? Never re-evaluated afterwards. |
 | `calibrated` | bool | Did this sensor get a reference sample? `false` for every sensor if calibration was skipped. |
@@ -823,8 +821,6 @@ eight entries shown (the other six follow the same shape):
 | `qw`, `qx`, `qy`, `qz` | float, 4 dp | The quaternion, as the rotation **since the calibration pose**. This is the primary orientation output — prefer it for anything 3D. |
 | `piezo_left` | integer | Raw `analogRead()` of GPIO 34. |
 | `piezo_right` | integer | Raw `analogRead()` of GPIO 35. |
-
-
 
 ---
 
@@ -862,7 +858,6 @@ reported_heading = current_heading − imuOffsets[i].heading
 
 In the T-pose all three come out ~0. Move, and they measure the departure from it.
 
-
 **For quaternions** the same idea, done properly. Rotations do not subtract; they compose,
 and undoing one means composing with its inverse. For a rotation quaternion, the inverse is
 the conjugate (negate `x`, `y`, `z`). So:
@@ -893,7 +888,7 @@ active algorithm.
 
 ---
 
-## 13. Error handling
+## 13. Error Handling
 
 The strategy across the whole firmware is: **detect at boot, show it on an LED, report it
 in the JSON, and keep serving.** Nothing is ever retried.
@@ -960,7 +955,7 @@ needs touching.
 ### Pins
 
 | Constant | Value | Why it exists |
-| --- | --- | --- |
+|---|---|---|
 | `SDA_PIN` | `21` | I²C data line to the multiplexer. |
 | `SCL_PIN` | `22` | I²C clock line. |
 | `PIEZO_LEFT_PIN` | `34` | Left piezo. GPIO 34/35 are input-only, analog-capable ESP32 pins — they cannot be outputs, which is fine here. |
@@ -972,7 +967,7 @@ needs touching.
 ### I²C and sensors
 
 | Constant | Value | Why it exists |
-| --- | --- | --- |
+|---|---|---|
 | `TCA9548A_ADDR` | `0x70` | The multiplexer's I²C address — its factory default. Changeable in hardware via address pins; if you do that, change it here too. |
 | `NUM_IMUS` | `8` | The size of **every** per-sensor array, the loop bound everywhere, and the guard in `selectMuxChannel()`. It is the project's master dimension. Raising it also requires: more `Adafruit_BNO055` entries and more `allReadings` entries in `global.cpp`, more `BodyPart` values and names in `types.h`/`json.cpp`, and more rows in `imuOrientation[]`. It is not a one-line change — and 8 is the TCA9548A's channel count anyway. |
 | `IMU_DELAY_MS` | `3` | Settling time after switching channels, before reading. **This is the main throughput knob**: it is paid eight times per request (~24 ms). Lower it for speed at the risk of reading a channel that has not settled; raise it for reliability at the cost of rate. Note that `initializeIMUs()` does *not* use it — detection uses its own hard-coded `delay(20)`. |
@@ -980,13 +975,13 @@ needs touching.
 ### Calibration
 
 | Constant | Value | Why it exists |
-| --- | --- | --- |
-| `CALIBRATION_TIME_MS` | `10000` | How long the wearer has to reach and hold the T-pose before the reference sample is taken. It is a wait, not a measurement window — see [Algorithms](#12-algorithms). It also fixes how long boot takes, since it blocks. |
+|---|---|---|
+| `CALIBRATION_TIME_MS` | `10000` | How long the wearer has to reach and hold the T-pose before the reference sample is taken. It is a wait, not a measurement window — see [Section 12](#12-algorithms). It also fixes how long boot takes, since it blocks. |
 
 ### Wi-Fi
 
 | Constant | Value | Why it exists |
-| --- | --- | --- |
+|---|---|---|
 | `WIFI_SSID` | `"ESP32_Test"` | The name of the network the ESP32 creates. |
 | `WIFI_PASSWORD` | `"12345678"` | Its password. Must be at least 8 characters for WPA2. |
 
@@ -1013,7 +1008,7 @@ and 35 will do.
 
 ---
 
-## 15. Architecture summary
+## 15. Architecture Summary
 
 **Where the data comes from.** Eight BNO055 sensors on the body, each doing its own sensor
 fusion, plus two analog piezos. The sensors are electrically identical and share one I²C

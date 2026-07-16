@@ -3,8 +3,6 @@
 
 ---
 
----
-
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
@@ -21,8 +19,6 @@
 12. [Error Handling](#12-error-handling)
 13. [Configuration](#13-configuration)
 14. [Architecture Summary](#14-architecture-summary)
-15. [What the Code Does Not Determine](#15-what-the-code-does-not-determine)
-16. [Observations From the Implementation](#16-observations-from-the-implementation)
 
 ---
 
@@ -52,16 +48,15 @@ To use body movement as an input signal, the movement must first become **data**
 
 Three numbers per sensor, eight sensors, so **24 numbers describe a body pose**. That is the payload this project moves.
 
-
 ### Hardware involved
 
-Inferred from the pin assignments, I2C addresses, and libraries used in the source:
+Inferred from the pin assignments, I²C addresses, and libraries used in the source:
 
 | Component | Quantity | Role in the system |
 |---|---|---|
 | ESP32 microcontroller | 1 | Runs the firmware; reads sensors; hosts the Wi-Fi network and server |
 | BNO055 IMU | 8 | One per tracked body part; reports orientation |
-| TCA9548A I2C multiplexer | 1 | Lets all eight identical sensors share one wire pair (see [Section 11](#111-why-a-multiplexer-is-required)) |
+| TCA9548A I²C multiplexer | 1 | Lets all eight identical sensors share one wire pair (see [Section 11](#111-why-a-multiplexer-is-required)) |
 | Piezo sensor | 2 | Two analog inputs, read as raw numbers (left and right) |
 | LED | 3 | Red / yellow / green — shows system state without a computer attached |
 
@@ -154,9 +149,10 @@ Two things in this diagram are worth pausing on, because they are easy to assume
 
 ```
 V2/
-├── Python_Suit_ESP32_Get_Data_V2/     ← client: runs on a computer
 ├── Arduino_Suit_ESP32_Get_Data_V2/    ← firmware: runs on the suit
-└── README.md                          ← this file
+├── Python_Suit_ESP32_Get_Data_V2/     ← client: runs on a computer
+└── README.md                          ← this document
+```
 
 | Folder | Purpose | Interaction with the rest |
 |---|---|---|
@@ -164,7 +160,6 @@ V2/
 | `Python_Suit_ESP32_Get_Data_V2/` | Everything that runs on the computer. Plain Python scripts, no packaging. | Talks to the firmware **only** by sending HTTP requests to a hardcoded address. |
 
 The two folders are independent programs in different languages. They agree on one thing: the shape of the JSON at `GET /data`. If you change that shape on one side, you must change it on the other.
-
 
 ---
 
@@ -181,6 +176,7 @@ Files are presented in **dependency order**: foundations first, then the parts b
 **What it holds.** Pin numbers, the multiplexer's address, the sensor count, timing values, and Wi-Fi credentials. Full list in [Section 13](#13-configuration).
 
 **Dependencies.** None. It is the bottom of the stack.
+
 **Used by.** Nearly every other firmware file.
 
 Every value is `constexpr`, meaning it is fixed when the code is compiled and costs no memory or time at runtime. **These are not settings you can change while the suit is running** — changing any of them requires recompiling and re-flashing the ESP32.
@@ -199,6 +195,7 @@ Every value is `constexpr`, meaning it is fixed when the code is compiled and co
 - `SensorReading` — one complete reading for one body part: which part, its angles, and the two piezo values.
 
 **Dependencies.** Arduino core only.
+
 **Used by.** `global`, `status`, `json`, `imu`, `calibration`.
 
 #### `global.h` / `global.cpp` — the shared state
@@ -219,6 +216,7 @@ Every value is `constexpr`, meaning it is fixed when the code is compiled and co
 `global.cpp` also performs a quiet but critical step: it stamps each slot of `allReadings` with its body part, in enum order, so slot `2` permanently *is* `LEFT_ARM`.
 
 **Dependencies.** `config.h`, `types.h`, and the `WebServer` and `Adafruit_BNO055` libraries.
+
 **Used by.** `status`, `imu`, `calibration`, `wifi_manager`, `server`, `handlers`, `json`, and the `.ino`.
 
 **The trade-off.** Global state is convenient and, in a single-threaded program of this size, workable. Its cost is that nothing is protected: `handleDataRequest()` writes `allReadings` while `buildJson()` reads it. That is safe *here* only because both run one after the other on the same single thread, never at the same time. It would stop being safe the moment anything ran concurrently.
@@ -232,21 +230,25 @@ Every value is `constexpr`, meaning it is fixed when the code is compiled and co
 **Main functions.** `initializeGPIO()` sets the three LED pins as outputs (all off) and the two piezo pins as inputs; `setRedLED()` / `setYellowLED()` / `setGreenLED()` control the lights; `readLeftPiezo()` / `readRightPiezo()` return raw analog readings.
 
 **Inputs.** Pin numbers from `config.h`.
+
 **Outputs.** LED voltages; piezo numbers.
+
 **Dependencies.** `config.h`.
+
 **Used by.** `status.cpp` (for LEDs), `imu.cpp` (for piezos), the `.ino` (for setup).
 
 Piezo pins `34` and `35` are **input-only** pins on the ESP32 — physically incapable of output — which is why `INPUT` is the only mode they are given.
 
 #### `mux.h` / `mux.cpp` — one sensor at a time
 
-**Why it exists.** This tiny file solves the project's central hardware problem. All eight BNO055 sensors have the **same** built-in I2C address (`0x28`). Two devices with the same address on one bus cannot be told apart. The TCA9548A multiplexer is an electronically controlled switch that connects exactly one group of wires at a time. This file drives that switch.
+**Why it exists.** This tiny file solves the project's central hardware problem. All eight BNO055 sensors have the **same** built-in I²C address (`0x28`). Two devices with the same address on one bus cannot be told apart. The TCA9548A multiplexer is an electronically controlled switch that connects exactly one group of wires at a time. This file drives that switch.
 
 **How it works.** `selectMuxChannel(channel)` refuses any channel `>= 8`, then sends a single byte to the multiplexer at address `0x70`. That byte is `1 << channel` — a *bitmask*, where each bit position corresponds to one channel. Channel 3 becomes `00001000`. The multiplexer connects the channels whose bits are set, and disconnects the rest.
 
 **Consequence.** After `selectMuxChannel(3)`, address `0x28` unambiguously means "the sensor on channel 3". Every sensor read in this firmware is therefore a two-step move: *select, then read*.
 
-**Dependencies.** `Wire` (the I2C library), `config.h`.
+**Dependencies.** `Wire` (the I²C library), `config.h`.
+
 **Used by.** `imu.cpp` only.
 
 The byte format would allow several channels at once, but the firmware never does this — it always selects exactly one. The function does not check whether the multiplexer acknowledged the command; see [Section 12](#12-error-handling).
@@ -266,9 +268,10 @@ The byte format would allow several channels at once, but the firmware never doe
 | `SYSTEM_READY` | off | off | **on** | Working normally |
 | `SYSTEM_ERROR` | **on** | off | off | A sensor or Wi-Fi failed |
 
-`updateStatus()` is intended to blink the yellow LED every 500 ms during calibration, and is called from the main loop. **In practice it never blinks** — calibration begins and finishes entirely inside `setup()`, before the main loop runs even once, and nothing sets the state back to `SYSTEM_CALIBRATION` afterwards. By the time `updateStatus()` is first called, the state is always `READY` or `ERROR`, and the function returns immediately. The yellow LED is therefore *solid* during calibration, not blinking. See [Section 16](#16-observations-from-the-implementation).
+`updateStatus()` is intended to blink the yellow LED every 500 ms during calibration, and is called from the main loop. **In practice it never blinks** — calibration begins and finishes entirely inside `setup()`, before the main loop runs even once, and nothing sets the state back to `SYSTEM_CALIBRATION` afterwards. By the time `updateStatus()` is first called, the state is always `READY` or `ERROR`, and the function returns immediately. The yellow LED is therefore *solid* during calibration, not blinking.
 
 **Dependencies.** `types.h`, `global.h`, `gpio.h`.
+
 **Used by.** `imu`, `calibration`, `wifi_manager`, the `.ino`.
 
 ### 4.4 Sensor acquisition
@@ -282,6 +285,7 @@ The byte format would allow several channels at once, but the firmware never doe
 **Its current state.** All eight entries are set to the identity mapping — `X→heading, Y→pitch, Z→roll`, no inversions. **As written, this file changes nothing.** It is scaffolding: the mechanism is complete and wired in, waiting for real mounting values to be measured and filled in. That is worth knowing before you go looking for a bug in axis handling — there is no correction happening yet.
 
 **Dependencies.** `config.h`.
+
 **Used by.** `imu.cpp`.
 
 #### `imu.h` / `imu.cpp` — reading the sensors
@@ -299,6 +303,7 @@ The three results are returned through **references** (the `&` in the signature)
 **`allIMUsDetected()`** — reports whether all eight are present. **This function is never called anywhere in V2.** It is dead code; the same check is done inline inside `initializeIMUs()`.
 
 **Dependencies.** `config.h`, `global.h`, `gpio.h`, `mux.h`, `status.h`, `orientation.h`, `Wire`.
+
 **Used by.** `calibration.cpp`, `handlers.cpp`, the `.ino`.
 
 #### `calibration.h` / `calibration.cpp` — defining "zero"
@@ -310,6 +315,7 @@ The three results are returned through **references** (the `&` in the signature)
 From then on, every reading has its offset subtracted, so the T-pose reads as `(0, 0, 0)` and all later values are movement *away from* the T-pose. The algorithm and its limits are in [Section 11.3](#113-t-pose-calibration).
 
 **Dependencies.** `global.h`, `imu.h`, `status.h`.
+
 **Used by.** The `.ino`, once, during startup.
 
 ### 4.5 Communication
@@ -323,6 +329,7 @@ From then on, every reading has its offset subtracted, so the T-pose reads as `(
 **The crucial detail.** The firmware **never chooses an IP address** — it reports whatever `WiFi.softAPIP()` returns. The Python client, meanwhile, has `192.168.4.1` hardcoded. These two agree because `192.168.4.1` is the Arduino-ESP32 core's default soft-AP address, not because either side negotiates it. **This is a silent convention, not an enforced contract.** If the core's default ever changed, the two halves would stop talking and nothing in the code would explain why. The serial output at boot is the way to check the real address.
 
 **Dependencies.** `WiFi`, `config.h`, `global.h`, `status.h`.
+
 **Used by.** The `.ino`.
 
 #### `server.h` / `server.cpp` — answering requests
@@ -341,6 +348,7 @@ Registering a route means: "when a request for this path arrives, call this func
 `/health` is a **liveness check** — it answers instantly without touching a sensor, so a positive reply proves the server is alive even if the sensors are not. It is a deliberately cheap question. Note that **the V2 Python client never calls it**; it exists for manual checks or future use.
 
 **Dependencies.** `global.h`, `handlers.h`.
+
 **Used by.** The `.ino`.
 
 #### `handlers.h` / `handlers.cpp` — what happens when data is asked for
@@ -358,6 +366,7 @@ Registering a route means: "when a request for this path arrives, call this func
 `200` is the HTTP code for "here is what you asked for".
 
 **Dependencies.** `global.h`, `imu.h`, `json.h`.
+
 **Used by.** `server.cpp`, as the `/data` route handler.
 
 #### `json.h` / `json.cpp` — packaging the numbers as text
@@ -403,11 +412,12 @@ The result:
 The piezo duplication is real: two suit-wide values are repeated eight times because they are stored per-`SensorReading`, and `SensorReading` is per-body-part. The client reads them from entry `0` and ignores the other seven copies.
 
 **Dependencies.** `global.h`.
+
 **Used by.** `handlers.cpp`.
 
 ### 4.6 The firmware entry point
 
-#### `Arduino_Suit_ESP32_Get_Data_V2.ino`
+#### `Arduino_Suit_ESP32_Get_Data_V2.ino` — the entry point
 
 **Why it exists.** Every Arduino program has two required functions: `setup()`, which runs once at power-on, and `loop()`, which runs over and over forever afterwards. This file is deliberately thin — it is a **table of contents**, not a worker. It decides *order*, and delegates every actual task.
 
@@ -682,9 +692,9 @@ Everything below happens before the system can answer a single request.
 
 `initializeStatus()` sets `SYSTEM_BOOT` and lights the **yellow** LED. From this moment on, the LEDs are meaningful.
 
-### Stage 4 — I2C
+### Stage 4 — I²C
 
-`Wire.begin(SDA_PIN, SCL_PIN)` starts the two-wire bus on pins 21 and 22. **I2C** is a protocol where many devices share the same two wires and are addressed by number. Nothing on the bus is contacted yet — this only prepares the ESP32's side. Note that V2 never calls `Wire.setClock()`, so the bus speed is whatever the Arduino-ESP32 core defaults to.
+`Wire.begin(SDA_PIN, SCL_PIN)` starts the two-wire bus on pins 21 and 22. **I²C** is a protocol where many devices share the same two wires and are addressed by number. Nothing on the bus is contacted yet — this only prepares the ESP32's side. Note that V2 never calls `Wire.setClock()`, so the bus speed is whatever the Arduino-ESP32 core defaults to.
 
 ### Stage 5 — IMU detection
 
@@ -753,7 +763,7 @@ The cost is dominated by a hard, code-determined floor:
 8 sensors × delay(IMU_DELAY_MS = 3 ms) = 24 ms  ← minimum, guaranteed
 ```
 
-On top of that sit the I2C transactions, the JSON string building, and the HTTP send — none of which can be quantified from source alone. **So: a `/data` request takes at least 24 ms, and in reality more.**
+On top of that sit the I²C transactions, the JSON string building, and the HTTP send — none of which can be quantified from source alone. **So: a `/data` request takes at least 24 ms, and in reality more.**
 
 ### The actual update rate
 
@@ -775,7 +785,7 @@ period = request time + print time + 50 ms
        ≥ 74 ms   →   ≤ ~13.5 updates per second
 ```
 
-**The true rate is below 13.5 Hz, and the exact value cannot be determined from the source** — it depends on I2C speed, Wi-Fi conditions, and terminal speed. To be clear about what `UPDATE_PERIOD` is: it is a *delay between requests*, not a period, and it cannot be used to derive the sample rate. Raising the rate meaningfully would require attention to the 24 ms floor, not just a smaller sleep.
+**The true rate is below 13.5 Hz, and the exact value cannot be determined from the source** — it depends on I²C speed, Wi-Fi conditions, and terminal speed. To be clear about what `UPDATE_PERIOD` is: it is a *delay between requests*, not a period, and it cannot be used to derive the sample rate. Raising the rate meaningfully would require attention to the 24 ms floor, not just a smaller sleep.
 
 ### What updates, what does not
 
@@ -795,7 +805,7 @@ The last row is worth dwelling on: **the client cannot control the suit at all.*
 
 V2 uses five protocols. Each was chosen for a reason.
 
-### I2C — between the ESP32 and the sensors
+### I²C — between the ESP32 and the sensors
 
 **What it is.** A protocol where many chips share just two wires: `SDA` (data) and `SCL` (clock). Each device has a numeric address; the controller names an address, and only that device responds.
 
@@ -803,7 +813,7 @@ V2 uses five protocols. Each was chosen for a reason.
 
 **Where.** `Wire.begin(21, 22)` in the `.ino`; used by `mux.cpp` and, through the Adafruit library, by `imu.cpp`.
 
-**The problem it creates.** I2C identifies devices by address — but all eight BNO055s have the *same* address, `0x28`. This is what the multiplexer exists to solve ([Section 11.1](#111-why-a-multiplexer-is-required)).
+**The problem it creates.** I²C identifies devices by address — but all eight BNO055s have the *same* address, `0x28`. This is what the multiplexer exists to solve ([Section 11.1](#111-why-a-multiplexer-is-required)).
 
 **Addresses in V2:** `0x70` = multiplexer, `0x28` = whichever sensor is currently connected.
 
@@ -862,7 +872,7 @@ V2 uses five protocols. Each was chosen for a reason.
 
 ### 11.1 Why a multiplexer is required
 
-**The problem.** I2C addresses devices by number. All eight BNO055 sensors ship with the same address, `0x28`. Put two on one bus and both answer at once — the data collides and neither is readable. (The BNO055 does support a second address, `0x29`, but that yields two sensors, not eight.)
+**The problem.** I²C addresses devices by number. All eight BNO055 sensors ship with the same address, `0x28`. Put two on one bus and both answer at once — the data collides and neither is readable. (The BNO055 does support a second address, `0x29`, but that yields two sensors, not eight.)
 
 **The solution.** The TCA9548A is an electronically controlled switch sitting between the ESP32 and the sensors. It has eight channels and connects only the ones you select. With one sensor per channel and only one channel ever active, address `0x28` is never ambiguous.
 
@@ -983,7 +993,6 @@ Startup nevertheless continues: Wi-Fi comes up, the server starts, and `/data` i
 
 **At read time.** `readIMU()` refuses undetected sensors and returns `false`. In `captureIMUs()`, that triggers `continue` — the slot is **skipped, leaving its previous contents in place**. The consequence: a failed sensor's JSON entry shows `0.00` (its initial value) or, if it worked earlier and then failed, its **last successful reading, indefinitely**. Nothing in the numbers reveals that they are stale. The `detected` flag is the only signal, and a client that ignores it will silently treat frozen data as live.
 
-
 ### Multiplexer failure
 
 `selectMuxChannel()` ignores the return value of `Wire.endTransmission()`, so a failed channel switch is invisible. In practice this is largely covered at startup — if the multiplexer is absent, no sensor answers `begin()`, and the system reports `SYSTEM_ERROR`. A multiplexer that fails *after* startup would not be detected.
@@ -1001,7 +1010,6 @@ Startup nevertheless continues: Wi-Fi comes up, the server starts, and `/data` i
 ### Timeouts
 
 `REQUEST_TIMEOUT = 30` seconds. Sensible in isolation, but consider it against the 50 ms poll: **a hung suit freezes the client for 30 seconds** — roughly 400 missed updates — before it even reports a problem. For a system aiming at ~13 updates per second, a timeout under a second would fail far faster and lose nothing, since any request taking longer than that has already missed its slot. This is an observation from the values in the code, not a required change.
-
 
 ### Summary
 
@@ -1032,15 +1040,15 @@ All values are compile-time constants. **Changing any of them requires recompili
 
 | Constant | Value | Purpose | Notes |
 |---|---|---|---|
-| `SDA_PIN` | `21` | I2C data | ESP32 default |
-| `SCL_PIN` | `22` | I2C clock | ESP32 default |
+| `SDA_PIN` | `21` | I²C data | ESP32 default |
+| `SCL_PIN` | `22` | I²C clock | ESP32 default |
 | `PIEZO_LEFT_PIN` | `34` | Left piezo (analog in) | Input-only pin |
 | `PIEZO_RIGHT_PIN` | `35` | Right piezo (analog in) | Input-only pin |
 | `LED_RED_PIN` | `16` | Error indicator | |
 | `LED_YELLOW_PIN` | `17` | Boot / calibration indicator | |
 | `LED_GREEN_PIN` | `18` | Ready indicator | |
 
-#### I2C
+#### I²C
 
 | Constant | Value | Purpose |
 |---|---|---|
@@ -1056,7 +1064,6 @@ The sensors' own address, `0x28`, is **not** in `config.h` — it is the Adafrui
 | `IMU_DELAY_MS` | `3` | Settling wait after a channel switch | The single biggest lever on update rate |
 
 `NUM_IMUS` is used as the array size for `imuSensors`, `allReadings`, `imuOffsets`, `imuStatus`, and `imuOrientation`, and as the bound in `selectMuxChannel()`. But those arrays are **explicitly initialised with eight entries each** in `global.cpp` and `orientation.cpp`, and `BodyPart` names exactly eight parts. Changing `NUM_IMUS` alone would not work — the initialiser lists and the enum must change with it. It also happens to equal the multiplexer's channel count, which is why it doubles as the channel-range check in `mux.cpp`.
-
 
 #### Calibration
 
@@ -1074,7 +1081,6 @@ Ten seconds of fully blocking wait. It is a wait for the *human*, not for the se
 | `WIFI_PASSWORD` | `"12345678"` | The network password |
 
 Both are plaintext compile-time constants, and both are **printed to the serial console at every boot** by `initializeWiFi()`. This is a development-grade default: the name is generic enough to collide if two suits are ever powered on together, and the password is a placeholder. Anyone in Wi-Fi range with these credentials can join the network and read `/data`, which has no authentication of any kind.
-
 
 ### Client — `Python_Suit_ESP32_Get_Data_V2/config.py`
 
@@ -1122,7 +1128,7 @@ Physical movement rotates eight BNO055 sensors on the body. Each one fuses its o
 
 ### How it moves
 
-Because all eight sensors share one I2C address, they cannot be read simultaneously. A TCA9548A multiplexer connects one at a time; the firmware selects a channel, waits 3 ms, and reads. Eight times. That sequence — and its 24 ms cost — is the defining constraint of the system's timing.
+Because all eight sensors share one I²C address, they cannot be read simultaneously. A TCA9548A multiplexer connects one at a time; the firmware selects a channel, waits 3 ms, and reads. Eight times. That sequence — and its 24 ms cost — is the defining constraint of the system's timing.
 
 The readings are corrected (axis mapping, currently a no-op; then offset subtraction), written to a shared array, and serialised to JSON by hand. They travel over a Wi-Fi network the ESP32 creates itself, in reply to an HTTP request, and are parsed into a dictionary on the far side.
 
@@ -1185,7 +1191,7 @@ flowchart TD
 If you remember nothing else from this document:
 
 1. **The suit is pulled, not pushed.** Sensors are read *inside* the HTTP handler. No request, no measurement. The client's polling *is* the sample clock.
-2. **The multiplexer sets the ceiling.** Eight identical I2C addresses force one-at-a-time reads at 3 ms each. That 24 ms floor is why the update rate is what it is, and no amount of client tuning moves it.
+2. **The multiplexer sets the ceiling.** Eight identical I²C addresses force one-at-a-time reads at 3 ms each. That 24 ms floor is why the update rate is what it is, and no amount of client tuning moves it.
 3. **The array index is the wiring diagram.** `2` means channel 2, `allReadings[2]`, and `"left_arm"` — all at once. Miswire a sensor and the whole stack reports confident nonsense.
 4. **Calibration means "subtract the T-pose."** One sample, taken once, subtracted forever. It does not mean the sensor is internally calibrated.
 5. **Failures are reported, never fatal** — but only startup failures are noticed at all. After boot, the firmware trusts its hardware unconditionally.
