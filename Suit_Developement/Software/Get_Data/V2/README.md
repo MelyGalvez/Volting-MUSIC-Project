@@ -52,7 +52,6 @@ To use body movement as an input signal, the movement must first become **data**
 
 Three numbers per sensor, eight sensors, so **24 numbers describe a body pose**. That is the payload this project moves.
 
-> Version 2 labels these three fields `heading`, `pitch`, and `roll`, and this document uses those names throughout because they are the names in the code and in the transmitted data. Be aware that the `pitch` and `roll` labels do not match the sensor's own definitions — see [Section 16](#16-observations-from-the-implementation).
 
 ### Hardware involved
 
@@ -155,27 +154,9 @@ Two things in this diagram are worth pausing on, because they are easy to assume
 
 ```
 V2/
-├── README.md                          ← this file
-├── DOCUMENTATION_GUIDELINES.md        ← writing rules this document follows
-│
+├── Python_Suit_ESP32_Get_Data_V2/     ← client: runs on a computer
 ├── Arduino_Suit_ESP32_Get_Data_V2/    ← firmware: runs on the suit
-│   ├── Arduino_Suit_ESP32_Get_Data_V2.ino
-│   ├── config.h        types.h
-│   ├── global.h/.cpp
-│   ├── gpio.h/.cpp     status.h/.cpp
-│   ├── mux.h/.cpp      imu.h/.cpp
-│   ├── orientation.h/.cpp
-│   ├── calibration.h/.cpp
-│   ├── wifi_manager.h/.cpp
-│   ├── server.h/.cpp   handlers.h/.cpp
-│   └── json.h/.cpp
-│
-└── Python_Suit_ESP32_Get_Data_V2/     ← client: runs on a computer
-    ├── main.py
-    ├── config.py
-    ├── communication.py
-    └── display.py
-```
+└── README.md                          ← this file
 
 | Folder | Purpose | Interaction with the rest |
 |---|---|---|
@@ -184,14 +165,6 @@ V2/
 
 The two folders are independent programs in different languages. They agree on one thing: the shape of the JSON at `GET /data`. If you change that shape on one side, you must change it on the other.
 
-### A note on the firmware's file layout
-
-The firmware is split into **pairs**: a `.h` file (the *header*) and a `.cpp` file (the *implementation*).
-
-- The `.h` file is the **public announcement**: "here is what I can do for you." Other files read this.
-- The `.cpp` file is the **private work**: "here is how I actually do it." Nobody else needs to read this.
-
-This is why, in the sections below, you will often see a file described as depending on another file's `.h`. That is the dependency — the announcement, not the work. It lets each part be understood, and changed, on its own.
 
 ---
 
@@ -1010,7 +983,6 @@ Startup nevertheless continues: Wi-Fi comes up, the server starts, and `/data` i
 
 **At read time.** `readIMU()` refuses undetected sensors and returns `false`. In `captureIMUs()`, that triggers `continue` — the slot is **skipped, leaving its previous contents in place**. The consequence: a failed sensor's JSON entry shows `0.00` (its initial value) or, if it worked earlier and then failed, its **last successful reading, indefinitely**. Nothing in the numbers reveals that they are stale. The `detected` flag is the only signal, and a client that ignores it will silently treat frozen data as live.
 
-**What is not detected.** A sensor that answers `begin()` but returns garbage afterwards passes every check V2 makes. There is no range checking, no plausibility test, and no re-detection: `detected` is written once at startup and never revisited. A sensor that fails after boot is never noticed.
 
 ### Multiplexer failure
 
@@ -1030,11 +1002,6 @@ Startup nevertheless continues: Wi-Fi comes up, the server starts, and `/data` i
 
 `REQUEST_TIMEOUT = 30` seconds. Sensible in isolation, but consider it against the 50 ms poll: **a hung suit freezes the client for 30 seconds** — roughly 400 missed updates — before it even reports a problem. For a system aiming at ~13 updates per second, a timeout under a second would fail far faster and lose nothing, since any request taking longer than that has already missed its slot. This is an observation from the values in the code, not a required change.
 
-### Invalid values
-
-Neither side validates. The firmware sends whatever the sensor returns; the client prints whatever arrives. There are no range checks on angles, no filtering of piezo values, no rejection of implausible jumps.
-
-Note also that `display_sensor_data()` reads `data["timestamp"]`, `data["system"]`, and `data["imu_data"]` directly. If a reply were valid JSON but missing a field, the resulting `KeyError` is **not** a `RequestException` and is **not** caught — it would crash the client. This is safe against the V2 firmware, which always sends all fields, but it means the client trusts the response's shape completely.
 
 ### Summary
 
@@ -1090,7 +1057,6 @@ The sensors' own address, `0x28`, is **not** in `config.h` — it is the Adafrui
 
 `NUM_IMUS` is used as the array size for `imuSensors`, `allReadings`, `imuOffsets`, `imuStatus`, and `imuOrientation`, and as the bound in `selectMuxChannel()`. But those arrays are **explicitly initialised with eight entries each** in `global.cpp` and `orientation.cpp`, and `BodyPart` names exactly eight parts. Changing `NUM_IMUS` alone would not work — the initialiser lists and the enum must change with it. It also happens to equal the multiplexer's channel count, which is why it doubles as the channel-range check in `mux.cpp`.
 
-`IMU_DELAY_MS` is the most consequential number in the file. It is paid eight times per request (24 ms). Lowering it raises the achievable rate; too low and sensors are read before the bus has settled, yielding corrupt values. **The source gives no indication of how 3 ms was chosen**, or of how much margin it carries.
 
 #### Calibration
 
@@ -1109,24 +1075,6 @@ Ten seconds of fully blocking wait. It is a wait for the *human*, not for the se
 
 Both are plaintext compile-time constants, and both are **printed to the serial console at every boot** by `initializeWiFi()`. This is a development-grade default: the name is generic enough to collide if two suits are ever powered on together, and the password is a placeholder. Anyone in Wi-Fi range with these credentials can join the network and read `/data`, which has no authentication of any kind.
 
-#### Not configurable, but worth knowing
-
-These are hardcoded rather than exposed in `config.h`:
-
-| Value | Where | Notes |
-|---|---|---|
-| HTTP port `80` | `global.cpp` — `WebServer server(80)` | The default web port, so the client's URL needs no port |
-| Serial baud `115200` | The `.ino` | A serial monitor must match this |
-| Blink interval `500` ms | `status.cpp` | Never reached in practice |
-| Startup settle `500` ms | The `.ino` | |
-| Post-channel-switch settle `20` ms | `imu.cpp`, startup only | Longer than the 3 ms used at read time |
-| Body part names | `json.cpp` — `bodyName()` | The strings the client sees |
-| State names | `json.cpp` — `stateName()` | |
-| Sensor address `0x28` | Adafruit library default | |
-| Sensor mode `NDOF` | Adafruit library default for `begin()` | Full 9-axis fusion, using the magnetometer |
-| Axis mappings | `orientation.cpp` | All identity — no correction applied |
-| I2C bus speed | Never set | Whatever the Arduino-ESP32 core defaults to |
-| ADC resolution / attenuation | Never set | `analogReadResolution()` and `analogSetAttenuation()` are never called, so piezo values are in the core's default raw units |
 
 ### Client — `Python_Suit_ESP32_Get_Data_V2/config.py`
 
@@ -1241,104 +1189,3 @@ If you remember nothing else from this document:
 3. **The array index is the wiring diagram.** `2` means channel 2, `allReadings[2]`, and `"left_arm"` — all at once. Miswire a sensor and the whole stack reports confident nonsense.
 4. **Calibration means "subtract the T-pose."** One sample, taken once, subtracted forever. It does not mean the sensor is internally calibrated.
 5. **Failures are reported, never fatal** — but only startup failures are noticed at all. After boot, the firmware trusts its hardware unconditionally.
-
----
-
-## 15. What the Code Does Not Determine
-
-Per the instruction to state rather than guess, the following **cannot** be established from V2's source:
-
-**Timing and performance**
-- The actual achievable update rate. The 24 ms delay floor and the 50 ms client sleep are certain; I2C transaction time, JSON building, Wi-Fi latency, and terminal printing are not. The real rate is **below ~13.5 Hz**, but its value is unknown.
-- The real total startup time. The fixed delays total ≈ 10.7 s; sensor boot time, Wi-Fi bring-up, and server start are unmeasurable from source.
-- Whether `IMU_DELAY_MS = 3` is comfortable or marginal. No rationale is recorded anywhere.
-
-**Hardware**
-- The exact ESP32 board. Pins 21/22/34/35/16/17/18 are consistent with common ESP32 devkits, but the specific model is not stated.
-- What the piezo sensors physically measure, and what they are *for*. The code reads two analog pins named "left" and "right" and forwards raw numbers. No comment, name, or usage in V2 reveals their purpose.
-- Whether piezo values carry units or meaning. Nothing scales or interprets them.
-- Power, wiring, battery, and physical mounting — entirely absent from the source.
-- Whether the eight sensors are in fact wired to the channels their `BodyPart` numbers imply. This is a physical assumption the software cannot check.
-
-**Intent**
-- Why `NUM_IMUS = 8`, beyond it matching the multiplexer's channel count and the enum's length.
-- Whether the piezo duplication across all eight JSON entries is deliberate or incidental.
-- Whether the identity orientation table is a placeholder, or a deliberate statement that all sensors are mounted identically. The mechanism's existence suggests the former, but the code does not say.
-- Whether `/health` is intended for a future client, for manual checks, or is vestigial.
-- What the data is ultimately for. The project name suggests music; **no V2 source file contains anything musical.**
-
-**Dependencies**
-- Library versions. Nothing is pinned; V2 vendors no libraries and ships neither a `requirements.txt` nor a `library.properties`.
-
-**Not part of V2 at all**
-- Recording, storage, visualisation, and music generation do not exist in this version.
-- No tests, no build script, no CI configuration.
-- The client cannot command the suit — no calibration trigger, no reset, no configuration route.
-
-> Claims in this document about the Adafruit library's behaviour — the default `0x28` address, the default NDOF mode, and the Euler vector's component order — come from the `Adafruit_BNO055` library, which is **not** part of V2 and is not vendored here. They were verified against the library installed on this machine. If a different version is used, they should be re-checked.
-
----
-
-## 16. Observations From the Implementation
-
-These are behaviours the code exhibits that a reader would reasonably expect to be otherwise. They are recorded because this document describes what V2 *does*, not what it appears to intend. **No source code was changed.**
-
-### The `pitch` and `roll` fields carry each other's values
-
-`readIMU()` in `imu.cpp` assigns:
-
-```cpp
-heading = euler.x();
-pitch   = euler.y();
-roll    = euler.z();
-```
-
-The BNO055 stores its Euler angles in three consecutive register pairs, in the order **heading, roll, pitch** (`0x1A`, `0x1C`, `0x1E`). `getVector(VECTOR_EULER)` reads those six bytes in order, so its components are:
-
-| Component | Actually contains |
-|---|---|
-| `euler.x()` | heading |
-| `euler.y()` | **roll** |
-| `euler.z()` | **pitch** |
-
-So the field V2 calls `pitch` holds the sensor's **roll**, and the field it calls `roll` holds the sensor's **pitch**. `heading` is correct.
-
-This is consistent from end to end — the swap is applied identically to the calibration offsets and to every reading, so the subtraction still cancels correctly and the values are self-consistent. Nothing is corrupted. But the **labels do not describe the data**: the JSON's `pitch`, and the `P=` column in the terminal, show roll.
-
-There is one observable symptom that does not depend on trusting the above: the BNO055's roll spans ±90° while its pitch spans ±180°. So V2's `pitch` field is confined to ±90 and its `roll` field ranges over ±180 — the opposite of what the names suggest.
-
-This matters most for whoever consumes the data next. Anyone building on `/data` will reasonably assume `pitch` means pitch.
-
-### The yellow LED never blinks
-
-`updateStatus()` blinks the yellow LED every 500 ms, but only when the state is `SYSTEM_CALIBRATION`, and it is called only from `loop()`. Calibration runs entirely inside `setup()` — including its 10-second blocking `delay()` — and finishes before `loop()` runs even once. Nothing sets the state back to `SYSTEM_CALIBRATION` afterwards, so by the time `updateStatus()` is first called the state is always `READY` or `ERROR` and the function returns immediately.
-
-**The yellow LED is therefore solid during calibration, not blinking**, and the blink code is unreachable in practice. The intent is clear from the comments; the sequencing prevents it. Since the blink is presumably meant to signal "hold still", and holding still for 10 seconds is exactly what the wearer must do, this is a feature that does not currently reach the person who needs it.
-
-### `allIMUsDetected()` is never called
-
-Declared in `imu.h`, defined in `imu.cpp`, referenced nowhere. `initializeIMUs()` performs the same check inline with a local `success` flag. Dead code.
-
-### Heading calibration breaks across the 0°/360° wrap
-
-Covered in [Section 11.3](#113-t-pose-calibration). Plain subtraction of a wrapping angle produces errors of a full turn when the T-pose heading sits near the wrap point.
-
-### Piezo values are duplicated eight times
-
-Two suit-wide values are stored per-body-part, so `buildJson()` writes them eight times. The client reads entry `0` and ignores the rest. This inflates every response for no gain — a structural consequence of `SensorReading` owning the piezo fields.
-
-### A single missing sensor disables calibration for all eight
-
-The `SYSTEM_ERROR` state skips `calibrateIMUs()` entirely, so the seven working sensors report raw earth-relative angles rather than T-pose-relative ones. Defensible as a fail-loud choice, but the scope is wider than "the broken sensor is unusable".
-
-### A sensor that fails after startup reports stale data indefinitely
-
-`detected` is set once at boot and never revisited. When `readIMU()` fails, `captureIMUs()` skips the slot, leaving its previous contents. The JSON keeps reporting the last good reading, and `detected` still says `true`. Only a reboot re-checks.
-
-### The 30-second timeout is long for a 50 ms poll
-
-`REQUEST_TIMEOUT = 30` stalls the client for 30 seconds — roughly 400 missed updates — before reporting a problem. Any request exceeding a second has already missed its slot.
-
-### The client trusts the response's shape completely
-
-`display_sensor_data()` indexes `data["timestamp"]`, `data["system"]`, `data["imu_data"]`, and `data["imu_data"][0]` without guards. A reply that is valid JSON but missing a field raises `KeyError`, which is not a `RequestException` and is not caught. Safe against the V2 firmware, which always sends every field.
