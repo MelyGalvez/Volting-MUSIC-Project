@@ -1382,6 +1382,3 @@ found.
     these are inferred from the `import`/`#include` lines.
 
 ---
-
-*End of document. This README describes the V1 source exactly as it exists; no
-code was modified in the course of writing it.*
