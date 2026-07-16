@@ -199,7 +199,6 @@ The `V1` folder contains two program folders plus this documentation.
 V1/
 ├── Arduino_Suit_ESP32_Get_Send_Data_V1/   → Firmware for the ESP32 (C++/Arduino)
 ├── Python_Suit_ESP32_Get_Send_Data_V1/    → Client program for the PC (Python)
-├── DOCUMENTATION_GUIDELINES.md            → The rules this README follows
 └── README.md                              → This document
 ```
 
@@ -245,18 +244,6 @@ The two programs are described separately.
 
 ### 4.A — The ESP32 firmware (C++)
 
-A quick idea before the files: in C++ (as used here) the program is split into
-**modules**. Each module is a pair:
-
-- a **header** file (`.h`) that lists the functions a module makes available
-  to others — think of it as a *menu*;
-- a **source** file (`.cpp`) that actually implements those functions — the
-  *kitchen* behind the menu.
-
-Other modules only need to read the menu (`.h`) to use a module; they do not
-need to know how the kitchen works. This keeps the pieces independent.
-
----
 
 #### `Arduino_Suit_ESP32_Get_Send_Data_V1.ino` — the entry point
 
@@ -299,9 +286,6 @@ need to know how the kitchen works. This keeps the pieces independent.
   reads these values. All configurable parameters are listed in
   [Section 13](#13-configuration).
 
-> ⚠️ **Note:** `FIRST_IMU_CHANNEL` is **defined but never used** anywhere in
-> the firmware (verified by searching the whole project). Its intended purpose
-> is unclear from the code alone. It is documented here only for completeness.
 
 ---
 
@@ -339,12 +323,6 @@ need to know how the kitchen works. This keeps the pieces independent.
 - **Inputs/Outputs:** this is shared state, so it is *written* by some modules
   and *read* by others (see [Section 5](#5-communication-between-files)).
 
-> ⚠️ **Note:** `actionTriggered` is created and set to `false`, and it is
-> *read* when building the JSON reply — but **nothing in V1 ever sets it to
-> `true`**. As a result the `action_flag` field sent to the computer is
-> **always `false`**. It appears to be a placeholder reserved for a future
-> feature. The parent folder's example output confirms this ("Action TX:
-> False").
 
 ---
 
@@ -375,21 +353,11 @@ need to know how the kitchen works. This keeps the pieces independent.
 - **Responsibilities:** select a single multiplexer channel.
 - **Main function:**
   - `selectMuxChannel(channel)` — tells the multiplexer which channel to
-    connect. It first rejects any `channel` value below 1 or above 8, then
-    sends the multiplexer a single byte with one bit set (`1 << channel`).
+    connect.
 - **Inputs:** a channel number. **Outputs:** an I²C command to the multiplexer.
 - **Interaction:** called by `imu.cpp` before every sensor access, so that the
   correct sensor is connected first.
 
-> ⚠️ **Note (important behaviour):** the callers loop over channel numbers
-> `0..7`, but this function *ignores* channel `0` (it fails the `channel < 1`
-> test and returns without doing anything). It also uses `1 << channel`, which
-> for channel `1` selects hardware line 1, for channel `7` selects hardware
-> line 7, and so on. The practical consequences of this off-by-one are
-> discussed in [Section 11](#11-algorithms) and
-> [Section 15](#15-known-limitations--uncertainties). The exact physical wiring
-> cannot be proven from the source alone, so the effect is described as a
-> strong inference, not a certainty.
 
 ---
 
@@ -416,10 +384,6 @@ need to know how the kitchen works. This keeps the pieces independent.
 - **Interaction:** it relies on `mux.cpp` to switch channels and on `globals`
   to store results. It is triggered by `handlers.cpp` whenever the computer
   asks for data.
-
-> ⚠️ **Note:** `readIMUData()` always returns `true`. It never reports a failed
-> read, even if a sensor is missing or silent. See
-> [Section 12](#12-error-handling).
 
 ---
 
@@ -629,7 +593,7 @@ functions it needs from another file.
   display data, and clean up on exit.
 - **What it does, in order:**
   1. Creates a *lock* (`http_lock`) used to prevent two network requests from
-     overlapping (see the note below).
+     overlapping.
   2. Calls `keyboard_listener(...)`, passing in the toggle functions.
   3. Enters an endless loop: fetch data with `get_sensor_data()`, display it,
      then pause for `UPDATE_PERIOD` seconds.
@@ -641,12 +605,6 @@ functions it needs from another file.
 - **Interaction:** it imports from every other Python file. It is the top of the
   dependency chain.
 
-> ⚠️ **Note:** the `http_lock` is used **only** around the data request in the
-> main loop. The LED/vibration commands, which are sent from the keyboard's
-> background thread, do **not** take this lock. So the lock does not fully
-> prevent a data request and a command request from happening at the same time.
-> In practice the suit handles requests one at a time anyway, but this is worth
-> knowing. See [Section 12](#12-error-handling).
 
 ---
 
@@ -807,9 +765,6 @@ switched off**, in order.
    and a final command switches every LED and motor off before the program
    exits.
 
-> There is no formal "shutdown" on the suit: it keeps serving until it loses
-> power. The clean-up on exit happens on the **computer** side, which politely
-> turns the suit's outputs off first.
 
 ---
 
@@ -878,13 +833,6 @@ The order matters, because later steps depend on earlier ones:
 Only after all six succeed does the suit print "System ready" and enter its
 loop.
 
-> The parent folder's usage notes suggest **waiting about 30 seconds** after
-> power-on before the sensors are fully ready. The firmware itself only contains
-> short explicit pauses (a 10 ms wait per sensor during start-up and a 3 ms wait
-> per sensor per read). The longer settling time comes from the BNO055 sensors'
-> own internal start-up, not from a timer in this code — so the "30 seconds"
-> figure is guidance from usage, not a value you will find written in the
-> source.
 
 ### Client initialization (top of `main.py`)
 
@@ -1052,11 +1000,6 @@ The important point: **this project does not compute orientation itself.** It
 simply asks the sensor for the finished angles (`getVector(VECTOR_EULER)`). That
 is why the firmware has no heavy mathematics.
 
-> ⚠️ **Convention note:** the code copies the three returned values into
-> `heading`, `pitch`, and `roll` in that order. Which physical axis each value
-> truly represents depends on the BNO055's own angle convention and on how the
-> sensor is mounted on the body. The names in the code are labels; confirming
-> that each label matches the real-world axis would require testing the hardware.
 
 ### 2. Sharing eight identical sensors with a multiplexer
 
@@ -1072,25 +1015,6 @@ The selection is done with a **bit pattern**: the multiplexer connects channel
 *k* when bit *k* of the byte it receives is set to 1. The code produces that
 byte with `1 << channel` (a `1` shifted left `channel` times).
 
-> ⚠️ **The off-by-one, explained plainly.** The reading loops count
-> `channel = 0, 1, 2, … 7`. But `selectMuxChannel` **ignores 0** (it only
-> accepts 1–8) and uses `1 << channel`. The practical effects are:
->
-> - For channels **1 through 7**, hardware lines 1 through 7 are selected — one
->   sensor at a time, as intended.
-> - For channel **0**, the function does nothing, so the multiplexer stays
->   pointed at whatever channel was selected **last** (channel 7 from the
->   previous cycle). Reading "sensor 0" therefore re-reads whichever sensor is
->   still connected, rather than a distinct channel-0 sensor.
-> - A TCA9548A only has channels 0–7, so there is no way for this scheme to
->   reach a genuine eighth line beyond channel 7.
->
-> This matches the example output in the parent folder's README, where
-> `CH 0` and `CH 7` show **identical** angles. The behaviour above is a **strong
-> inference** from reading the code; the exact result on real hardware depends on
-> the physical wiring, which the source does not reveal. This is the most
-> significant thing to verify before trusting all eight channels. See
-> [Section 15](#15-known-limitations--uncertainties).
 
 ### 3. Building JSON by hand
 
@@ -1219,10 +1143,6 @@ Everything you might reasonably want to change lives in just two files:
 the code: a `10 ms` pause per sensor at start-up (`imu.cpp`), a `3 ms` pause per
 sensor per read (`imu.cpp`), and the `5 ms` loop delay (main sketch).
 
-> ⚠️ **Note:** changing `NUM_IMUS` alone will not fix the channel-0 behaviour
-> described in [Section 11](#11-algorithms); that comes from the logic in
-> `selectMuxChannel()`. And `FIRST_IMU_CHANNEL` has no effect at all, because
-> nothing reads it.
 
 ### Computer configuration — `Python_Suit_ESP32_Get_Send_Data_V1/config.py`
 
