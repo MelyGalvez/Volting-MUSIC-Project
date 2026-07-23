@@ -9,6 +9,7 @@
 #include "wifi_manager.h"
 #include "server.h"
 #include "global.h"
+#include "json.h"
 
 
 // ================================================
@@ -27,11 +28,6 @@ void setup()
     Serial.begin(115200);
 
     delay(500);
-
-    Serial.println();
-    Serial.println("==================================");
-    Serial.println("      ESP32 MUSIC SUIT V2");
-    Serial.println("==================================");
 
     // ----------------- Hardware -----------------
 
@@ -61,8 +57,6 @@ void setup()
 
     initializeServer();
 
-    Serial.println();
-    Serial.println("System ready.");
 }
 
 
@@ -74,6 +68,7 @@ void loop()
     // --------------- Update LED -----------------
 
     updateStatus();
-
+    data = buildJson();
+    print(data);
     server.handleClient();
 }
