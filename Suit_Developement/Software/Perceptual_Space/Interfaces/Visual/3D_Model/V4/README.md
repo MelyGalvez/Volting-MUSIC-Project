@@ -32,7 +32,7 @@ that moves on screen in real time, and it can record a session to a
 spreadsheet file.
 
 It does **not** talk to the suit. It subscribes to a **message broker**, where
-another program (the bridge in `Data/Python_MQTT_Bridge/`) publishes the
+another program publishes the
 suit's measurements. From those measurements it reconstructs the rotation of
 each body segment, re-expresses it around the axes of the body, smooths it,
 and draws a stick figure with a head, a spine, two arms and two hands.
