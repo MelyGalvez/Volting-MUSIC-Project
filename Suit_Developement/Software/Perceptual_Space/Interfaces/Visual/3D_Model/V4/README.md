@@ -1,4 +1,4 @@
-# Visual — V2
+# 3D Model — V4
 ### Wearable Motion Suit — MQTT Client + 3D Skeleton Viewer
 
 ---
