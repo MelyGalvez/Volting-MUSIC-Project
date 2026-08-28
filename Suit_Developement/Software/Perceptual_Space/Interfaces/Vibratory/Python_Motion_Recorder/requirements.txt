@@ -1,0 +1,2 @@
+# Motion recorder dependencies
+paho-mqtt>=2.0,<3

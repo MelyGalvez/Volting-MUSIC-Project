@@ -1,0 +1,3 @@
+# Motion replay and haptic feedback dependencies
+paho-mqtt>=2.0,<3
+numpy>=1.24
